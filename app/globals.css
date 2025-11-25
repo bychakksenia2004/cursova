@@ -143,3 +143,18 @@ button:hover, button:focus {
   padding: 0.5rem 0.9rem;
   border-radius: 12px;
 }
+
+/* Top-right user badge */
+.top-right-user {
+  position: fixed;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 9999;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.top-right-user .badge {
+  border-radius: 12px;
+  padding: 0.45rem 0.7rem;
+}

@@ -188,10 +188,34 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$serv
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$bcryptjs$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/bcryptjs/index.js [app-route] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$mongodb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/mongodb.ts [app-route] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$User$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/models/User.ts [app-route] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$externals$5d2f$crypto__$5b$external$5d$__$28$crypto$2c$__cjs$29$__ = __turbopack_context__.i("[externals]/crypto [external] (crypto, cjs)");
 ;
 ;
 ;
 ;
+;
+function base64url(input) {
+    const b = typeof input === "string" ? Buffer.from(input) : input;
+    return b.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function createToken(payload, secret, expiresInSec = 7 * 24 * 3600) {
+    const header = {
+        alg: "HS256",
+        typ: "JWT"
+    };
+    const now = Math.floor(Date.now() / 1000);
+    const body = {
+        ...payload,
+        iat: now,
+        exp: now + expiresInSec
+    };
+    const headerB = base64url(JSON.stringify(header));
+    const payloadB = base64url(JSON.stringify(body));
+    const toSign = `${headerB}.${payloadB}`;
+    const sig = __TURBOPACK__imported__module__$5b$externals$5d2f$crypto__$5b$external$5d$__$28$crypto$2c$__cjs$29$__["default"].createHmac("sha256", secret).update(toSign).digest();
+    const sigB = base64url(sig);
+    return `${toSign}.${sigB}`;
+}
 async function POST(req) {
     try {
         const body = await req.json();
@@ -208,15 +232,12 @@ async function POST(req) {
             $or: [
                 {
                     email: email.toLowerCase()
-                },
-                {
-                    username
                 }
             ]
         }).lean();
         if (existing) {
             return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                error: "User with given email or username already exists"
+                error: "User with given email already exists"
             }, {
                 status: 409
             });
@@ -225,14 +246,37 @@ async function POST(req) {
         const created = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$User$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].create({
             email: email.toLowerCase(),
             username,
-            password: passwordHash,
-            passwordHash
+            password: passwordHash
         });
-        return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+        const JWT_SECRET = process.env.JWT_SECRET;
+        const headers = {
+            "Content-Type": "application/json"
+        };
+        let debugSetCookie = null;
+        if (JWT_SECRET) {
+            const token = createToken({
+                sub: String(created._id),
+                email: created.email
+            }, JWT_SECRET, 7 * 24 * 3600);
+            const secure = ("TURBOPACK compile-time value", "development") === "production";
+            const maxAge = 7 * 24 * 3600;
+            const cookie = `token=${token}; HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax${("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : ""}`;
+            headers["Set-Cookie"] = cookie;
+            debugSetCookie = cookie;
+            console.log("POST /api/register - Set-Cookie:", cookie);
+        } else {
+            console.warn("POST /api/register - JWT_SECRET not set — no cookie will be issued");
+        }
+        const bodyResp = {
             ok: true,
             id: created._id
-        }, {
-            status: 201
+        };
+        if ("TURBOPACK compile-time truthy", 1) {
+            bodyResp.debugSetCookie = debugSetCookie;
+        }
+        return new __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"](JSON.stringify(bodyResp), {
+            status: 201,
+            headers
         });
     } catch (err) {
         console.error("Register error:", err);

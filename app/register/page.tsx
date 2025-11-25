@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -11,6 +11,12 @@ export default function Register() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      document.title = "TestHub | Реєстрація";
+    } catch {}
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,6 +36,7 @@ export default function Register() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // <- ensure browser accepts Set-Cookie from the response
         body: JSON.stringify({ email, username, password })
       });
 
@@ -47,14 +54,27 @@ export default function Register() {
         }
       }
 
+      if (data?.warning) {
+        console.warn("Register warning:", data.warning);
+      }
+      
       if (!res.ok) {
         setError(data?.error || data?.message || "Помилка реєстрації");
         setLoading(false);
         return;
       }
 
-      // успіх — перенаправляємо на логін
-      router.push("/login");
+      // повідомити клієнтські компоненти про зміну auth
+      try {
+        localStorage.setItem("auth-refresh", String(Date.now()));
+        // notify same-tab listeners
+        try { window.dispatchEvent(new Event("auth-refresh")); } catch {}
+      } catch {}
+
+      try {
+        await router.refresh();
+      } catch {}
+      router.push("/");
     } catch (err: any) {
       console.error(err);
       setError(err?.message || "Помилка мережі");
