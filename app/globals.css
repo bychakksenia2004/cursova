@@ -93,6 +93,32 @@ html, body, #__next {
   gap: 0.5rem;
 }
 
+/* Center-aligned action buttons used in forms */
+.actions-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Center label for questions in the questions view */
+.question-label {
+  display: block;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Stronger selector to override other form-label rules */
+.menu-box .question-label,
+.menu-box label.form-label.question-label {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
   background: radial-gradient(circle, rgba(197,168,255,1) 0%, rgba(97,97,255,1) 100%);
@@ -104,14 +130,28 @@ body {
   min-height: 80vh;
 }
 
-.home-menu .menu-box, .login-container, .register-container {
+.menu-box, .login-container, .register-container {
   border: 1px solid #222;
   border-radius: 18px;
   background: transparent;
   padding: 2rem 1.5rem;
   box-shadow: 0 2px 16px rgba(0,0,0,0.07);
   width: 100%;
-  max-width: 350px;
+  max-width: 95%;
+  margin: 0 auto;
+}
+
+/* Responsive widths: small screens use percentage, medium and large get fixed max widths */
+@media (min-width: 640px) {
+  .menu-box, .login-container, .register-container {
+    max-width: 600px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .menu-box, .login-container, .register-container {
+    max-width: 800px;
+  }
 }
 
 button {
@@ -157,4 +197,15 @@ button:hover, button:focus {
 .top-right-user .badge {
   border-radius: 12px;
   padding: 0.45rem 0.7rem;
+}
+
+/* Error styling used across the editor for visibility on colorful background */
+.app-error {
+  color: #6b0000; /* dark red */
+  font-weight: 700; /* bold */
+}
+
+.invalid-feedback.app-error {
+  color: #6b0000 !important;
+  font-weight: 700 !important;
 }

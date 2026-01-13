@@ -10,7 +10,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      {/* fallback server-side head — забезпечує видимий title якщо per-page head не застосовується */}
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -18,7 +17,6 @@ export default function RootLayout({
       </head>
 
       <body className="page-root">
-        {/* Додаємо загальну кнопку Home (відображається умовно всередині TopLeftHome) */}
         <TopLeftHome />
         <TopRightUser />
         {children}

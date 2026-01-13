@@ -86,6 +86,28 @@ html, body, #__next {
   display: flex;
 }
 
+.actions-center {
+  justify-content: center;
+  align-items: center;
+  gap: .5rem;
+  display: flex;
+}
+
+.question-label {
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: .5rem;
+  font-weight: 600;
+  display: block;
+}
+
+.menu-box .question-label, .menu-box label.form-label.question-label {
+  text-align: center;
+  width: 100%;
+  display: block;
+}
+
 body {
   background: radial-gradient(circle, #c5a8ff 0%, #6161ff 100%);
   margin: 0;
@@ -97,14 +119,27 @@ body {
   min-height: 80vh;
 }
 
-.home-menu .menu-box, .login-container, .register-container {
+.menu-box, .login-container, .register-container {
   background: none;
   border: 1px solid #222;
   border-radius: 18px;
   width: 100%;
-  max-width: 350px;
+  max-width: 95%;
+  margin: 0 auto;
   padding: 2rem 1.5rem;
   box-shadow: 0 2px 16px #00000012;
+}
+
+@media (min-width: 640px) {
+  .menu-box, .login-container, .register-container {
+    max-width: 600px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .menu-box, .login-container, .register-container {
+    max-width: 800px;
+  }
 }
 
 button {
@@ -148,6 +183,16 @@ button:hover, button:focus {
 .top-right-user .badge {
   border-radius: 12px;
   padding: .45rem .7rem;
+}
+
+.app-error {
+  color: #6b0000;
+  font-weight: 700;
+}
+
+.invalid-feedback.app-error {
+  color: #6b0000 !important;
+  font-weight: 700 !important;
 }
 
 /*# sourceMappingURL=app_globals_css_bad6b30c._.single.css.map*/
