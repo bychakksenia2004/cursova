@@ -1,0 +1,98 @@
+import { NextResponse } from "next/server";
+import { connectToDB } from "../../../../lib/mongodb";
+import Test from "../../../../lib/models/Test";
+import { getUserFromCookieServer } from "../../../../lib/auth";
+
+export async function GET(req: Request, ctx: any) {
+  try {
+    await connectToDB();
+    const user = await getUserFromCookieServer();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const params = await ctx.params;
+    const id = params?.id;
+    const test = await Test.findById(id).lean();
+    if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (String(test.authorId) !== String(user._id)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    return NextResponse.json({ ok: true, test }, { status: 200 });
+  } catch (err: any) {
+    console.error("/api/tests/[id] GET error:", err);
+    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+  }
+}
+
+export async function PUT(req: Request, ctx: any) {
+  try {
+    await connectToDB();
+    const user = await getUserFromCookieServer();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const params = await ctx.params;
+    const id = params?.id;
+    const body = await req.json();
+    const { title, description, visibility, storeResponses, ownResultView, questions } = body;
+
+    const test = await Test.findById(id);
+    if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (String(test.authorId) !== String(user._id)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    if (title) test.title = String(title);
+    test.description = description ? String(description) : null;
+    test.visibility = visibility === "public" ? "public" : "private";
+    test.storeResponses = !!storeResponses;
+    test.ownResultView = ownResultView || "full";
+
+    // Transform questions to match schema discriminators (map front-end types)
+    function mapType(frontType: string) {
+      switch (frontType) {
+        case "single":
+          return "single_choice";
+        case "multi":
+          return "multi_choice";
+        case "sequence":
+          return "sequence";
+        case "matching":
+          return "matching";
+        case "open":
+          return "open";
+        default:
+          return frontType;
+      }
+    }
+
+    const transformed = (Array.isArray(questions) ? questions : []).map((q: any) => {
+      const common: any = { id: q.id, type: mapType(q.type), text: q.text };
+      if (q.type === "single" || q.type === "multi") common.options = q.data?.options || q.options || [];
+      else if (q.type === "sequence") common.options = q.data?.options || q.options || [];
+      else if (q.type === "matching") common.pairs = q.data?.pairs || q.pairs || [];
+      else if (q.type === "open") common.answers = q.data?.answers || q.answers || [];
+      return common;
+    });
+    test.questions = transformed as any;
+    await test.save();
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (err: any) {
+    console.error("/api/tests/[id] PUT error:", err);
+    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request, ctx: any) {
+  try {
+    await connectToDB();
+    const user = await getUserFromCookieServer();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const params = await ctx.params;
+    const id = params?.id;
+    const test = await Test.findById(id);
+    if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (String(test.authorId) !== String(user._id)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    await Test.findByIdAndDelete(id);
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (err: any) {
+    console.error("/api/tests/[id] DELETE error:", err);
+    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+  }
+}

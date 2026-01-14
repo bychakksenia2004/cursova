@@ -7,33 +7,32 @@ __turbopack_context__.s([
     ()=>OpenAnswer
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 "use client";
 ;
-;
-function OpenAnswer({ qid, invalidField, initial, onChange }) {
-    const [text, setText] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(initial?.text || "");
-    const [answers, setAnswers] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(initial && initial.answers || []);
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+function OpenAnswer({ qid, invalidField, text = "", answers = [], onChange }) {
+    function addAnswer() {
+        const next = [
+            ...answers,
+            ""
+        ];
         onChange && onChange({
             text,
-            answers
+            answers: next
         });
-    }, [
-        text,
-        answers
-    ]);
-    function addAnswer() {
-        setAnswers((s)=>[
-                ...s,
-                ""
-            ]);
     }
     function updateAnswer(idx, value) {
-        setAnswers((s)=>s.map((a, i)=>i === idx ? value : a));
+        const next = answers.map((a, i)=>i === idx ? value : a);
+        onChange && onChange({
+            text,
+            answers: next
+        });
     }
     function removeAnswer(idx) {
-        setAnswers((s)=>s.filter((_, i)=>i !== idx));
+        const next = answers.filter((_, i)=>i !== idx);
+        onChange && onChange({
+            text,
+            answers: next
+        });
     }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
@@ -46,10 +45,13 @@ function OpenAnswer({ qid, invalidField, initial, onChange }) {
                         value: text,
                         "data-qid": qid,
                         "data-field": "text",
-                        onChange: (e)=>setText(e.target.value)
+                        onChange: (e)=>onChange && onChange({
+                                text: e.target.value,
+                                answers
+                            })
                     }, void 0, false, {
                         fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                        lineNumber: 34,
+                        lineNumber: 31,
                         columnNumber: 9
                     }, this),
                     invalidField && invalidField.qid === (qid || 0) && invalidField.field === "text" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -57,13 +59,13 @@ function OpenAnswer({ qid, invalidField, initial, onChange }) {
                         children: invalidField.message
                     }, void 0, false, {
                         fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                        lineNumber: 43,
+                        lineNumber: 40,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                lineNumber: 33,
+                lineNumber: 30,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -77,7 +79,7 @@ function OpenAnswer({ qid, invalidField, initial, onChange }) {
                                 children: "Очікувана відповідь"
                             }, void 0, false, {
                                 fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                                lineNumber: 49,
+                                lineNumber: 46,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -87,13 +89,13 @@ function OpenAnswer({ qid, invalidField, initial, onChange }) {
                                 children: "Додати відповідь"
                             }, void 0, false, {
                                 fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                                lineNumber: 50,
+                                lineNumber: 47,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                        lineNumber: 48,
+                        lineNumber: 45,
                         columnNumber: 9
                     }, this),
                     answers.map((a, idx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -108,7 +110,7 @@ function OpenAnswer({ qid, invalidField, initial, onChange }) {
                                     onChange: (e)=>updateAnswer(idx, e.target.value)
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                                    lineNumber: 56,
+                                    lineNumber: 53,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -118,7 +120,7 @@ function OpenAnswer({ qid, invalidField, initial, onChange }) {
                                     children: "Видалити"
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                                    lineNumber: 64,
+                                    lineNumber: 61,
                                     columnNumber: 13
                                 }, this),
                                 invalidField && invalidField.qid === (qid || 0) && invalidField.field === "answer" && invalidField.idx === idx && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -126,19 +128,19 @@ function OpenAnswer({ qid, invalidField, initial, onChange }) {
                                     children: invalidField.message
                                 }, void 0, false, {
                                     fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                                    lineNumber: 68,
+                                    lineNumber: 65,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, idx, true, {
                             fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                            lineNumber: 55,
+                            lineNumber: 52,
                             columnNumber: 11
                         }, this))
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/components/testcomponents/OpenAnswer.tsx",
-                lineNumber: 47,
+                lineNumber: 44,
                 columnNumber: 7
             }, this)
         ]
@@ -603,127 +605,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcom
 ;
 ;
 function NewTestPage() {
+    // hooks used across the component
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
-    const [newQuestionType, setNewQuestionType] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("single");
-    function addQuestion(type) {
-        const qtype = type || newQuestionType;
-        const id = Date.now();
-        let data = {};
-        if (qtype === "single" || qtype === "multi") {
-            data.options = [
-                {
-                    id: Date.now() + 1,
-                    text: "",
-                    correct: true
-                },
-                {
-                    id: Date.now() + 2,
-                    text: "",
-                    correct: false
-                }
-            ];
-        } else if (qtype === "sequence") {
-            data.options = [
-                {
-                    id: Date.now() + 1,
-                    text: "",
-                    order: 1
-                },
-                {
-                    id: Date.now() + 2,
-                    text: "",
-                    order: 2
-                }
-            ];
-        } else if (qtype === "matching") {
-            data.pairs = [
-                {
-                    id: Date.now() + 1,
-                    left: "",
-                    right: ""
-                },
-                {
-                    id: Date.now() + 2,
-                    left: "",
-                    right: ""
-                }
-            ];
-        } else if (qtype === "open") {
-            data.answers = [
-                ""
-            ];
-        }
-        setQuestions((s)=>[
-                ...s,
-                {
-                    id,
-                    type: qtype,
-                    text: "",
-                    data
-                }
-            ]);
-    }
-    function updateQuestion(id, text) {
-        setQuestions((s)=>s.map((q)=>q.id === id ? {
-                    ...q,
-                    text
-                } : q));
-    }
-    function updateQuestionType(id, type) {
-        setQuestions((s)=>s.map((q)=>{
-                if (q.id !== id) return q;
-                let data = {};
-                if (type === "single" || type === "multi") {
-                    data.options = [
-                        {
-                            id: Date.now() + 1,
-                            text: "",
-                            correct: true
-                        },
-                        {
-                            id: Date.now() + 2,
-                            text: "",
-                            correct: false
-                        }
-                    ];
-                } else if (type === "sequence") {
-                    data.options = [
-                        {
-                            id: Date.now() + 1,
-                            text: "",
-                            order: 1
-                        },
-                        {
-                            id: Date.now() + 2,
-                            text: "",
-                            order: 2
-                        }
-                    ];
-                } else if (type === "matching") {
-                    data.pairs = [
-                        {
-                            id: Date.now() + 1,
-                            left: "",
-                            right: ""
-                        },
-                        {
-                            id: Date.now() + 2,
-                            left: "",
-                            right: ""
-                        }
-                    ];
-                } else if (type === "open") {
-                    data.answers = [
-                        ""
-                    ];
-                }
-                return {
-                    ...q,
-                    type,
-                    data
-                };
-            }));
-    }
+    const searchParams = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSearchParams"])();
     // Options management for single/multi choice
     function ensureOptions(id) {
         setQuestions((s)=>s.map((q)=>{
@@ -938,6 +822,32 @@ function NewTestPage() {
     function removeQuestion(id) {
         setQuestions((s)=>s.filter((q)=>q.id !== id));
     }
+    // new question type selector state and helpers (used by UI)
+    const [newQuestionType, setNewQuestionType] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("single");
+    function updateQuestion(qid, text) {
+        setQuestions((s)=>s.map((q)=>q.id === qid ? {
+                    ...q,
+                    text
+                } : q));
+    }
+    function updateQuestionType(qid, type) {
+        setQuestions((s)=>s.map((q, idx)=>q.id === qid ? normalizeQuestion({
+                    ...q,
+                    type
+                }, idx) : q));
+    }
+    function addQuestion() {
+        const q = {
+            id: Date.now(),
+            type: newQuestionType,
+            text: "",
+            data: {}
+        };
+        setQuestions((s)=>[
+                ...s,
+                normalizeQuestion(q, s.length)
+            ]);
+    }
     const [title, setTitle] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("");
     const [description, setDescription] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("");
     const [visibility, setVisibility] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("public");
@@ -947,11 +857,169 @@ function NewTestPage() {
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [questions, setQuestions] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
     const [invalidField, setInvalidField] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const DRAFT_KEY = "test_draft_v1";
+    const [lastSaved, setLastSaved] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [editId, setEditId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    // Ensure restored questions and nested items have necessary ids/defaults
+    function normalizeQuestion(q, idx) {
+        const out = {
+            ...q
+        };
+        if (!out.id) out.id = Date.now() + idx + 1;
+        if (!out.type) out.type = out.type || "single";
+        if (typeof out.text === "undefined") out.text = "";
+        out.data = out.data || {};
+        if (out.type === "single" || out.type === "multi") {
+            out.data.options = Array.isArray(out.data.options) ? out.data.options.map((o, i)=>({
+                    id: o?.id || Date.now() + idx + i + 2,
+                    text: typeof o?.text === "undefined" ? "" : o.text,
+                    correct: !!o?.correct
+                })) : [];
+        } else if (out.type === "sequence") {
+            out.data.options = Array.isArray(out.data.options) ? out.data.options.map((o, i)=>({
+                    id: o?.id || Date.now() + idx + i + 2,
+                    text: typeof o?.text === "undefined" ? "" : o.text,
+                    order: typeof o?.order === "undefined" ? i + 1 : o.order
+                })) : [];
+        } else if (out.type === "matching") {
+            out.data.pairs = Array.isArray(out.data.pairs) ? out.data.pairs.map((p, i)=>({
+                    id: p?.id || Date.now() + idx + i + 2,
+                    left: typeof p?.left === "undefined" ? "" : p.left,
+                    right: typeof p?.right === "undefined" ? "" : p.right
+                })) : [];
+        } else if (out.type === "open") {
+            out.data.answers = Array.isArray(out.data.answers) ? out.data.answers.map((a)=>typeof a === "undefined" ? "" : a) : [
+                ""
+            ];
+        }
+        return out;
+    }
+    // Always restore draft on mount so navigating away and back preserves state
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         try {
             document.title = "TestHub | Новий тест";
         } catch  {}
     }, []);
+    // reusable draft loader
+    function loadDraftFromStorage() {
+        try {
+            if ("TURBOPACK compile-time truthy", 1) return;
+            //TURBOPACK unreachable
+            ;
+            const raw = undefined;
+            const parsed = undefined;
+        } catch (err) {
+            console.warn("Failed to load draft:", err);
+        }
+    }
+    // Load on mount
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        loadDraftFromStorage();
+        // If the URL has ?edit=<id> fetch test for editing
+        try {
+            const id = searchParams.get("edit");
+            if (id) {
+                setEditId(id);
+                (async function() {
+                    try {
+                        const res = await fetch(`/api/tests/${id}`, {
+                            credentials: "include"
+                        });
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        if (data?.ok && data.test) {
+                            const t = data.test;
+                            setTitle(t.title || "");
+                            setDescription(t.description || "");
+                            setVisibility(t.visibility || "public");
+                            setStoreResponses(!!t.storeResponses);
+                            setOwnResultView(t.ownResultView || "full");
+                            // map server question types back to frontend
+                            const mapped = Array.isArray(t.questions) ? t.questions.map((q)=>{
+                                const mapBack = (stype)=>{
+                                    switch(stype){
+                                        case "single_choice":
+                                            return "single";
+                                        case "multi_choice":
+                                            return "multi";
+                                        case "sequence":
+                                            return "sequence";
+                                        case "matching":
+                                            return "matching";
+                                        case "open":
+                                            return "open";
+                                        default:
+                                            return stype;
+                                    }
+                                };
+                                const ftype = mapBack(q.type);
+                                const dataObj = {};
+                                if (ftype === "single" || ftype === "multi") dataObj.options = q.options || [];
+                                else if (ftype === "sequence") dataObj.options = q.options || [];
+                                else if (ftype === "matching") dataObj.pairs = q.pairs || [];
+                                else if (ftype === "open") dataObj.answers = q.answers || [];
+                                return {
+                                    id: q.id || Date.now(),
+                                    type: ftype,
+                                    text: q.text || "",
+                                    data: dataObj
+                                };
+                            }) : [];
+                            setQuestions(mapped);
+                        }
+                    } catch (err) {
+                        console.warn("Failed to load test for edit:", err);
+                    }
+                })();
+            }
+        } catch  {}
+    }, []);
+    // Also reload when pathname becomes this page (handles client-side navigation back)
+    const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePathname"])();
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        try {
+            if (pathname === "/editor/new") {
+                // only reload draft when not editing a specific test
+                const id = searchParams.get("edit");
+                if (!id) loadDraftFromStorage();
+            }
+        } catch  {}
+    }, [
+        pathname
+    ]);
+    // Auto-save draft to localStorage (immediate)
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        try {
+            if ("TURBOPACK compile-time truthy", 1) return;
+            //TURBOPACK unreachable
+            ;
+            const payload = undefined;
+        } catch  {}
+    }, [
+        title,
+        description,
+        visibility,
+        storeResponses,
+        ownResultView,
+        questions
+    ]);
+    function clearDraft() {
+        try {
+            if ("TURBOPACK compile-time truthy", 1) return;
+            //TURBOPACK unreachable
+            ;
+        } catch  {}
+        setTitle("");
+        setDescription("");
+        setVisibility("public");
+        setStoreResponses(true);
+        setOwnResultView("full");
+        setQuestions([]);
+        setLastSaved(null);
+        setInvalidField(null);
+        setError(null);
+    }
+    // Note: lastSaved timestamp is still stored in localStorage but not shown in the UI.
     function validateQuestions() {
         // validate title first
         if (!title || !String(title).trim()) {
@@ -1148,30 +1216,42 @@ function NewTestPage() {
         // title validation now handled in validateQuestions()
         setLoading(true);
         try {
-            // Змінити URL /api/tests на реальний API створення тесту
-            const res = await fetch("/api/tests", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                    title,
-                    description,
-                    visibility,
-                    storeResponses,
-                    ownResultView,
-                    questions
-                })
-            });
+            let res;
+            const payload = {
+                title,
+                description,
+                visibility,
+                storeResponses,
+                ownResultView,
+                questions
+            };
+            if (editId) {
+                res = await fetch(`/api/tests/${editId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                res = await fetch("/api/tests", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify(payload)
+                });
+            }
             if (!res.ok) {
                 const txt = await res.text();
                 throw new Error(txt || `HTTP ${res.status}`);
             }
-            // після успіху — повернутись до /editor або на сторінку тесту
+            // після успіху — повернутись до /editor
             router.push("/editor");
         } catch (err) {
-            setError(err?.message || "Помилка при створенні тесту");
+            setError(err?.message || (editId ? "Помилка при оновленні тесту" : "Помилка при створенні тесту"));
             setLoading(false);
         }
     }
@@ -1183,7 +1263,7 @@ function NewTestPage() {
                 children: "Новий тест"
             }, void 0, false, {
                 fileName: "[project]/app/editor/new/page.tsx",
-                lineNumber: 397,
+                lineNumber: 521,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -1198,7 +1278,7 @@ function NewTestPage() {
                                 children: "Назва"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 400,
+                                lineNumber: 524,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1208,7 +1288,7 @@ function NewTestPage() {
                                 onChange: (e)=>setTitle(e.target.value)
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 401,
+                                lineNumber: 525,
                                 columnNumber: 11
                             }, this),
                             invalidField && invalidField.field === "title" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1216,13 +1296,13 @@ function NewTestPage() {
                                 children: invalidField.message
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 408,
+                                lineNumber: 532,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 399,
+                        lineNumber: 523,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1233,7 +1313,7 @@ function NewTestPage() {
                                 children: "Опис"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 413,
+                                lineNumber: 537,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -1243,13 +1323,13 @@ function NewTestPage() {
                                 onChange: (e)=>setDescription(e.target.value)
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 414,
+                                lineNumber: 538,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 412,
+                        lineNumber: 536,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1260,7 +1340,7 @@ function NewTestPage() {
                                 children: "Видимість"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 423,
+                                lineNumber: 547,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1277,7 +1357,7 @@ function NewTestPage() {
                                         onChange: ()=>setVisibility("public")
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 425,
+                                        lineNumber: 549,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1286,7 +1366,7 @@ function NewTestPage() {
                                         children: "Публічний"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 434,
+                                        lineNumber: 558,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1299,7 +1379,7 @@ function NewTestPage() {
                                         onChange: ()=>setVisibility("private")
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 438,
+                                        lineNumber: 562,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1308,19 +1388,19 @@ function NewTestPage() {
                                         children: "Приватний"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 447,
+                                        lineNumber: 571,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 424,
+                                lineNumber: 548,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 422,
+                        lineNumber: 546,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1331,7 +1411,7 @@ function NewTestPage() {
                                 children: "Зберігати відповіді та результати користувачів"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 455,
+                                lineNumber: 579,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1348,7 +1428,7 @@ function NewTestPage() {
                                         onChange: ()=>setStoreResponses(true)
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 457,
+                                        lineNumber: 581,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1357,7 +1437,7 @@ function NewTestPage() {
                                         children: "Так"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 466,
+                                        lineNumber: 590,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1370,7 +1450,7 @@ function NewTestPage() {
                                         onChange: ()=>setStoreResponses(false)
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 470,
+                                        lineNumber: 594,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1379,13 +1459,13 @@ function NewTestPage() {
                                         children: "Ні"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 479,
+                                        lineNumber: 603,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 456,
+                                lineNumber: 580,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1393,13 +1473,13 @@ function NewTestPage() {
                                 children: "Якщо так — зберігатимуться індивідуальні відповіді та результати (ви зможете бачити список користувачів, які пройшли тест)."
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 483,
+                                lineNumber: 607,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 454,
+                        lineNumber: 578,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1410,7 +1490,7 @@ function NewTestPage() {
                                 children: "Що бачить користувач після проходження"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 490,
+                                lineNumber: 614,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1427,7 +1507,7 @@ function NewTestPage() {
                                         onChange: ()=>setOwnResultView("full")
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 492,
+                                        lineNumber: 616,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1436,7 +1516,7 @@ function NewTestPage() {
                                         children: "Повні результати (питання + відповіді + бали)"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 501,
+                                        lineNumber: 625,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1449,7 +1529,7 @@ function NewTestPage() {
                                         onChange: ()=>setOwnResultView("score_only")
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 505,
+                                        lineNumber: 629,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1458,7 +1538,7 @@ function NewTestPage() {
                                         children: "Тільки бали"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 514,
+                                        lineNumber: 638,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1471,7 +1551,7 @@ function NewTestPage() {
                                         onChange: ()=>setOwnResultView("nothing")
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 518,
+                                        lineNumber: 642,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1480,13 +1560,13 @@ function NewTestPage() {
                                         children: "Нічого не показувати"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 527,
+                                        lineNumber: 651,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 491,
+                                lineNumber: 615,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1494,13 +1574,13 @@ function NewTestPage() {
                                 children: "Ця опція визначає, що бачить сам користувач після завершення тесту незалежно від того, чи зберігаються відповіді."
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 531,
+                                lineNumber: 655,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 489,
+                        lineNumber: 613,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1511,7 +1591,7 @@ function NewTestPage() {
                                 children: "Питання"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 537,
+                                lineNumber: 661,
                                 columnNumber: 11
                             }, this),
                             questions.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1519,7 +1599,7 @@ function NewTestPage() {
                                 children: "Поки немає питань. Додайте перше питання."
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 540,
+                                lineNumber: 664,
                                 columnNumber: 13
                             }, this),
                             questions.map((q)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1533,7 +1613,7 @@ function NewTestPage() {
                                                     children: "Питання"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                    lineNumber: 545,
+                                                    lineNumber: 669,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1552,7 +1632,7 @@ function NewTestPage() {
                                                                     children: "Одиночний вибір"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 553,
+                                                                    lineNumber: 677,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1560,7 +1640,7 @@ function NewTestPage() {
                                                                     children: "Множинний вибір"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 554,
+                                                                    lineNumber: 678,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1568,7 +1648,7 @@ function NewTestPage() {
                                                                     children: "Порядок"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 555,
+                                                                    lineNumber: 679,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1576,7 +1656,7 @@ function NewTestPage() {
                                                                     children: "Відкрита відповідь"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 556,
+                                                                    lineNumber: 680,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1584,13 +1664,13 @@ function NewTestPage() {
                                                                     children: "Відповідності"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 557,
+                                                                    lineNumber: 681,
                                                                     columnNumber: 21
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/editor/new/page.tsx",
-                                                            lineNumber: 547,
+                                                            lineNumber: 671,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1598,19 +1678,19 @@ function NewTestPage() {
                                                             children: q.type
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/editor/new/page.tsx",
-                                                            lineNumber: 559,
+                                                            lineNumber: 683,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                    lineNumber: 546,
+                                                    lineNumber: 670,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 544,
+                                            lineNumber: 668,
                                             columnNumber: 15
                                         }, this),
                                         q.type !== "open" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -1624,7 +1704,7 @@ function NewTestPage() {
                                                     onChange: (e)=>updateQuestion(q.id, e.target.value)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                    lineNumber: 564,
+                                                    lineNumber: 688,
                                                     columnNumber: 19
                                                 }, this),
                                                 invalidField && invalidField.qid === q.id && invalidField.field === "text" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1632,7 +1712,7 @@ function NewTestPage() {
                                                     children: invalidField.message
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                    lineNumber: 573,
+                                                    lineNumber: 697,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
@@ -1640,17 +1720,15 @@ function NewTestPage() {
                                         q.type === "open" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcomponents$2f$OpenAnswer$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                                             qid: q.id,
                                             invalidField: invalidField,
-                                            initial: {
-                                                text: q.text,
-                                                answers: q.data && q.data.answers || []
-                                            },
+                                            text: q.text,
+                                            answers: q.data && q.data.answers || [],
                                             onChange: (v)=>{
                                                 updateQuestion(q.id, v.text);
                                                 updateOpenAnswer(q.id, v.answers);
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 578,
+                                            lineNumber: 702,
                                             columnNumber: 17
                                         }, this),
                                         q.type === "single" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcomponents$2f$SingleChoice$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -1664,7 +1742,7 @@ function NewTestPage() {
                                             toggleOptionCorrect: toggleOptionCorrect
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 590,
+                                            lineNumber: 715,
                                             columnNumber: 17
                                         }, this),
                                         q.type === "multi" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcomponents$2f$MultiChoice$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -1678,7 +1756,7 @@ function NewTestPage() {
                                             toggleOptionCorrect: toggleOptionCorrect
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 603,
+                                            lineNumber: 728,
                                             columnNumber: 17
                                         }, this),
                                         q.type === "sequence" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcomponents$2f$SequenceQuestion$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -1691,7 +1769,7 @@ function NewTestPage() {
                                             removeSequenceItem: removeSequenceItem
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 616,
+                                            lineNumber: 741,
                                             columnNumber: 17
                                         }, this),
                                         q.type === "matching" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcomponents$2f$MatchingQuestion$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -1703,7 +1781,7 @@ function NewTestPage() {
                                             removePairFromQuestion: removePairFromQuestion
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 628,
+                                            lineNumber: 753,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1715,18 +1793,18 @@ function NewTestPage() {
                                                 children: "Видалити питання"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 638,
+                                                lineNumber: 763,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 637,
+                                            lineNumber: 762,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, q.id, true, {
                                     fileName: "[project]/app/editor/new/page.tsx",
-                                    lineNumber: 543,
+                                    lineNumber: 667,
                                     columnNumber: 13
                                 }, this)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1742,7 +1820,7 @@ function NewTestPage() {
                                                 children: "Одиночний вибір"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 650,
+                                                lineNumber: 775,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1750,7 +1828,7 @@ function NewTestPage() {
                                                 children: "Множинний вибір"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 651,
+                                                lineNumber: 776,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1758,7 +1836,7 @@ function NewTestPage() {
                                                 children: "Порядок (послідовність)"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 652,
+                                                lineNumber: 777,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1766,7 +1844,7 @@ function NewTestPage() {
                                                 children: "Відкрита відповідь"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 653,
+                                                lineNumber: 778,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1774,13 +1852,13 @@ function NewTestPage() {
                                                 children: "Відповідності"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 654,
+                                                lineNumber: 779,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 645,
+                                        lineNumber: 770,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1790,19 +1868,19 @@ function NewTestPage() {
                                         children: "Додати питання"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 656,
+                                        lineNumber: 781,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 644,
+                                lineNumber: 769,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 536,
+                        lineNumber: 660,
                         columnNumber: 9
                     }, this),
                     error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1810,12 +1888,22 @@ function NewTestPage() {
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 662,
+                        lineNumber: 787,
                         columnNumber: 19
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "d-flex gap-2 actions-center",
                         children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                type: "button",
+                                className: "btn btn-sm btn-outline-danger",
+                                onClick: clearDraft,
+                                children: "Очистити всі поля"
+                            }, void 0, false, {
+                                fileName: "[project]/app/editor/new/page.tsx",
+                                lineNumber: 792,
+                                columnNumber: 11
+                            }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                 className: "btn btn-primary",
                                 type: "submit",
@@ -1823,7 +1911,7 @@ function NewTestPage() {
                                 children: loading ? "Зберігаю..." : "Створити тест"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 665,
+                                lineNumber: 795,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -1832,25 +1920,25 @@ function NewTestPage() {
                                 children: "Назад"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 668,
+                                lineNumber: 798,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 664,
+                        lineNumber: 791,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/editor/new/page.tsx",
-                lineNumber: 398,
+                lineNumber: 522,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/editor/new/page.tsx",
-        lineNumber: 396,
+        lineNumber: 520,
         columnNumber: 5
     }, this);
 }

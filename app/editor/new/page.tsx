@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import OpenAnswer from "../../components/testcomponents/OpenAnswer";
 import SingleChoice from "../../components/testcomponents/SingleChoice";
@@ -8,68 +8,9 @@ import MultiChoice from "../../components/testcomponents/MultiChoice";
 import SequenceQuestion from "../../components/testcomponents/SequenceQuestion";
 import MatchingQuestion from "../../components/testcomponents/MatchingQuestion";
 export default function NewTestPage() {
-
+  // hooks used across the component
   const router = useRouter();
-  const [newQuestionType, setNewQuestionType] = useState<
-    "single" | "multi" | "sequence" | "open" | "matching"
-  >("single");
-
-  function addQuestion(type?: "single" | "multi" | "sequence" | "open" | "matching") {
-    const qtype = type || newQuestionType;
-    const id = Date.now();
-    let data: any = {};
-    if (qtype === "single" || qtype === "multi") {
-      data.options = [
-        { id: Date.now() + 1, text: "", correct: true },
-        { id: Date.now() + 2, text: "", correct: false },
-      ];
-    } else if (qtype === "sequence") {
-      data.options = [
-        { id: Date.now() + 1, text: "", order: 1 },
-        { id: Date.now() + 2, text: "", order: 2 },
-      ];
-    } else if (qtype === "matching") {
-      data.pairs = [
-        { id: Date.now() + 1, left: "", right: "" },
-        { id: Date.now() + 2, left: "", right: "" },
-      ];
-    } else if (qtype === "open") {
-      data.answers = [""];
-    }
-    setQuestions((s) => [...s, { id, type: qtype, text: "", data }]);
-  }
-
-  function updateQuestion(id: number, text: string) {
-    setQuestions((s) => s.map((q) => (q.id === id ? { ...q, text } : q)));
-  }
-
-  function updateQuestionType(id: number, type: "single" | "multi" | "sequence" | "open" | "matching") {
-    setQuestions((s) =>
-      s.map((q) => {
-        if (q.id !== id) return q;
-        let data: any = {};
-        if (type === "single" || type === "multi") {
-          data.options = [
-            { id: Date.now() + 1, text: "", correct: true },
-            { id: Date.now() + 2, text: "", correct: false },
-          ];
-        } else if (type === "sequence") {
-          data.options = [
-            { id: Date.now() + 1, text: "", order: 1 },
-            { id: Date.now() + 2, text: "", order: 2 },
-          ];
-        } else if (type === "matching") {
-          data.pairs = [
-            { id: Date.now() + 1, left: "", right: "" },
-            { id: Date.now() + 2, left: "", right: "" },
-          ];
-        } else if (type === "open") {
-          data.answers = [""];
-        }
-        return { ...q, type, data };
-      })
-    );
-  }
+  const searchParams = useSearchParams();
 
   // Options management for single/multi choice
   function ensureOptions(id: number) {
@@ -206,6 +147,22 @@ export default function NewTestPage() {
     setQuestions((s) => s.filter((q) => q.id !== id));
   }
 
+  // new question type selector state and helpers (used by UI)
+  const [newQuestionType, setNewQuestionType] = useState<"single" | "multi" | "sequence" | "open" | "matching">("single");
+
+  function updateQuestion(qid: number, text: string) {
+    setQuestions((s) => s.map((q) => (q.id === qid ? { ...q, text } : q)));
+  }
+
+  function updateQuestionType(qid: number, type: string) {
+    setQuestions((s) => s.map((q, idx) => (q.id === qid ? normalizeQuestion({ ...q, type }, idx) : q)));
+  }
+
+  function addQuestion() {
+    const q: any = { id: Date.now(), type: newQuestionType, text: "", data: {} };
+    setQuestions((s) => [...s, normalizeQuestion(q, s.length)]);
+  }
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("public");
@@ -218,12 +175,169 @@ export default function NewTestPage() {
     Array<{ id: number; type: string; text: string; data?: any }>
   >([]);
   const [invalidField, setInvalidField] = useState<null | { qid: number; field: string; idx?: number; message?: string }>(null);
+  const DRAFT_KEY = "test_draft_v1";
+  const [lastSaved, setLastSaved] = useState<number | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
+  // Ensure restored questions and nested items have necessary ids/defaults
+  function normalizeQuestion(q: any, idx: number) {
+    const out: any = { ...q };
+    if (!out.id) out.id = Date.now() + idx + 1;
+    if (!out.type) out.type = out.type || "single";
+    if (typeof out.text === "undefined") out.text = "";
+    out.data = out.data || {};
+    if (out.type === "single" || out.type === "multi") {
+      out.data.options = Array.isArray(out.data.options) ? out.data.options.map((o: any, i: number) => ({
+        id: o?.id || (Date.now() + idx + i + 2),
+        text: typeof o?.text === "undefined" ? "" : o.text,
+        correct: !!o?.correct,
+      })) : [];
+    } else if (out.type === "sequence") {
+      out.data.options = Array.isArray(out.data.options) ? out.data.options.map((o: any, i: number) => ({
+        id: o?.id || (Date.now() + idx + i + 2),
+        text: typeof o?.text === "undefined" ? "" : o.text,
+        order: typeof o?.order === "undefined" ? i + 1 : o.order,
+      })) : [];
+    } else if (out.type === "matching") {
+      out.data.pairs = Array.isArray(out.data.pairs) ? out.data.pairs.map((p: any, i: number) => ({
+        id: p?.id || (Date.now() + idx + i + 2),
+        left: typeof p?.left === "undefined" ? "" : p.left,
+        right: typeof p?.right === "undefined" ? "" : p.right,
+      })) : [];
+    } else if (out.type === "open") {
+      out.data.answers = Array.isArray(out.data.answers) ? out.data.answers.map((a: any) => (typeof a === "undefined" ? "" : a)) : [""];
+    }
+    return out;
+  }
+  // Always restore draft on mount so navigating away and back preserves state
 
   useEffect(() => {
     try {
       document.title = "TestHub | Новий тест";
     } catch {}
   }, []);
+
+  // reusable draft loader
+  function loadDraftFromStorage() {
+    try {
+      if (typeof window === "undefined") return;
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      try { console.debug("[NewTestPage] loaded draft:", parsed); } catch {}
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "title")) setTitle(parsed.title ?? "");
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "description")) setDescription(parsed.description ?? "");
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "visibility")) setVisibility(parsed.visibility ?? "public");
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "storeResponses") && typeof parsed.storeResponses === "boolean") setStoreResponses(parsed.storeResponses);
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "ownResultView")) setOwnResultView(parsed.ownResultView ?? "full");
+      if (Array.isArray(parsed?.questions)) setQuestions(parsed.questions.map((q: any, i: number) => normalizeQuestion(q, i)));
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "lastSaved")) setLastSaved(parsed.lastSaved ?? null);
+    } catch (err) {
+      console.warn("Failed to load draft:", err);
+    }
+  }
+
+  // Load on mount
+  useEffect(() => {
+    loadDraftFromStorage();
+    // If the URL has ?edit=<id> fetch test for editing
+    try {
+      const id = searchParams.get("edit");
+      if (id) {
+        setEditId(id);
+        (async function () {
+          try {
+            const res = await fetch(`/api/tests/${id}`, { credentials: "include" });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data?.ok && data.test) {
+              const t = data.test;
+              setTitle(t.title || "");
+              setDescription(t.description || "");
+              setVisibility(t.visibility || "public");
+              setStoreResponses(!!t.storeResponses);
+              setOwnResultView(t.ownResultView || "full");
+              // map server question types back to frontend
+              const mapped = Array.isArray(t.questions) ? t.questions.map((q: any) => {
+                const mapBack = (stype: string) => {
+                  switch (stype) {
+                    case "single_choice": return "single";
+                    case "multi_choice": return "multi";
+                    case "sequence": return "sequence";
+                    case "matching": return "matching";
+                    case "open": return "open";
+                    default: return stype;
+                  }
+                };
+                const ftype = mapBack(q.type);
+                const dataObj: any = {};
+                if (ftype === "single" || ftype === "multi") dataObj.options = q.options || [];
+                else if (ftype === "sequence") dataObj.options = q.options || [];
+                else if (ftype === "matching") dataObj.pairs = q.pairs || [];
+                else if (ftype === "open") dataObj.answers = q.answers || [];
+                return { id: q.id || Date.now(), type: ftype, text: q.text || "", data: dataObj };
+              }) : [];
+              setQuestions(mapped);
+            }
+          } catch (err) {
+            console.warn("Failed to load test for edit:", err);
+          }
+        })();
+      }
+    } catch {}
+  }, []);
+
+  // Also reload when pathname becomes this page (handles client-side navigation back)
+  const pathname = usePathname();
+  useEffect(() => {
+    try {
+      if (pathname === "/editor/new") {
+        // only reload draft when not editing a specific test
+        const id = searchParams.get("edit");
+        if (!id) loadDraftFromStorage();
+      }
+    } catch {}
+  }, [pathname]);
+
+  // Auto-save draft to localStorage (immediate)
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      const payload = {
+        title,
+        description,
+        visibility,
+        storeResponses,
+        ownResultView,
+        questions,
+        lastSaved: Date.now(),
+      };
+      try {
+        window.localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+        setLastSaved(payload.lastSaved);
+      } catch (err) {
+        console.warn("Failed to save draft:", err);
+      }
+    } catch {}
+  }, [title, description, visibility, storeResponses, ownResultView, questions]);
+
+  function clearDraft() {
+    try {
+      if (typeof window === "undefined") return;
+      window.localStorage.removeItem(DRAFT_KEY);
+    } catch {}
+    setTitle("");
+    setDescription("");
+    setVisibility("public");
+    setStoreResponses(true);
+    setOwnResultView("full");
+    setQuestions([]);
+    setLastSaved(null);
+    setInvalidField(null);
+    setError(null);
+  }
+
+
+  // Note: lastSaved timestamp is still stored in localStorage but not shown in the UI.
 
   function validateQuestions() {
     // validate title first
@@ -366,28 +480,38 @@ export default function NewTestPage() {
     // title validation now handled in validateQuestions()
     setLoading(true);
     try {
-      // Змінити URL /api/tests на реальний API створення тесту
-      const res = await fetch("/api/tests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          title,
-          description,
-          visibility, // "public" або "private"
-          storeResponses, // boolean — чи зберігати відповіді/результати для перегляду списку пройшовших
-          ownResultView, // "full" = користувач бачить свої відповіді та результати; "score_only" = тільки бали
-          questions
-        })
-      });
+      let res: Response;
+      const payload = {
+        title,
+        description,
+        visibility,
+        storeResponses,
+        ownResultView,
+        questions,
+      };
+      if (editId) {
+        res = await fetch(`/api/tests/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch("/api/tests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+      }
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || `HTTP ${res.status}`);
       }
-      // після успіху — повернутись до /editor або на сторінку тесту
+      // після успіху — повернутись до /editor
       router.push("/editor");
     } catch (err: any) {
-      setError(err?.message || "Помилка при створенні тесту");
+      setError(err?.message || (editId ? "Помилка при оновленні тесту" : "Помилка при створенні тесту"));
       setLoading(false);
     }
   }
@@ -578,7 +702,8 @@ export default function NewTestPage() {
                 <OpenAnswer
                   qid={q.id}
                   invalidField={invalidField}
-                  initial={{ text: q.text, answers: (q.data && q.data.answers) || [] }}
+                  text={q.text}
+                  answers={(q.data && q.data.answers) || []}
                   onChange={(v) => {
                     updateQuestion(q.id, v.text);
                     updateOpenAnswer(q.id, v.answers);
@@ -661,7 +786,12 @@ export default function NewTestPage() {
 
         {error && <div className="app-error mb-3">{error}</div>}
 
+        {/* Removed manual restore UI and lastSaved display. Clear button moved to actions area below. */}
+
         <div className="d-flex gap-2 actions-center">
+          <button type="button" className="btn btn-sm btn-outline-danger" onClick={clearDraft}>
+            Очистити всі поля
+          </button>
           <button className="btn btn-primary" type="submit" disabled={loading}>
             {loading ? "Зберігаю..." : "Створити тест"}
           </button>

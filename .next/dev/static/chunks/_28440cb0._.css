@@ -13471,6 +13471,19 @@ body {
   box-shadow: 0 2px 16px #00000012;
 }
 
+.list-group.transparent-list {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.list-group.transparent-list .list-group-item {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: none;
+  border: 1px solid #0000000f;
+}
+
 @media (min-width: 640px) {
   .menu-box, .login-container, .register-container {
     max-width: 600px;

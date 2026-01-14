@@ -141,6 +141,18 @@ body {
   margin: 0 auto;
 }
 
+/* Make Bootstrap list groups transparent so page background shows through */
+.list-group.transparent-list {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.list-group.transparent-list .list-group-item {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.06);
+  backdrop-filter: none;
+}
+
 /* Responsive widths: small screens use percentage, medium and large get fixed max widths */
 @media (min-width: 640px) {
   .menu-box, .login-container, .register-container {

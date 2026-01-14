@@ -7,6 +7,7 @@ export default function Home() {
   const [user, setUser] = useState<{ username: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [hasDraft, setHasDraft] = useState(false);
 
   async function loadUser() {
     try {
@@ -41,6 +42,23 @@ export default function Home() {
       window.removeEventListener?.("storage", onStorage);
       window.removeEventListener?.("auth-refresh", onAuth);
     };
+  }, []);
+
+  // check for saved draft
+  useEffect(() => {
+    try {
+      const raw = typeof window !== "undefined" ? window.localStorage.getItem("test_draft_v1") : null;
+      setHasDraft(!!raw);
+    } catch {
+      setHasDraft(false);
+    }
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "test_draft_v1") {
+        try { setHasDraft(!!e.newValue); } catch { setHasDraft(false); }
+      }
+    };
+    window.addEventListener?.("storage", onStorage);
+    return () => { window.removeEventListener?.("storage", onStorage); };
   }, []);
 
   useEffect(() => {

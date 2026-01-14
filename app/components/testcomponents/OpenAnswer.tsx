@@ -4,28 +4,25 @@ import React, { useState, useEffect } from "react";
 type Props = {
   qid?: number;
   invalidField?: { qid: number; field: string; idx?: number; message?: string } | null;
-  initial?: { text?: string; answers?: string[] };
+  text?: string;
+  answers?: string[];
   onChange?: (v: { text: string; answers: string[] }) => void;
 };
 
-export default function OpenAnswer({ qid, invalidField, initial, onChange }: Props) {
-  const [text, setText] = useState(initial?.text || "");
-  const [answers, setAnswers] = useState<string[]>((initial && initial.answers) || []);
-
-  useEffect(() => {
-    onChange && onChange({ text, answers });
-  }, [text, answers]);
-
+export default function OpenAnswer({ qid, invalidField, text = "", answers = [], onChange }: Props) {
   function addAnswer() {
-    setAnswers((s) => [...s, ""]);
+    const next = [...answers, ""];
+    onChange && onChange({ text, answers: next });
   }
 
   function updateAnswer(idx: number, value: string) {
-    setAnswers((s) => s.map((a, i) => (i === idx ? value : a)));
+    const next = answers.map((a, i) => (i === idx ? value : a));
+    onChange && onChange({ text, answers: next });
   }
 
   function removeAnswer(idx: number) {
-    setAnswers((s) => s.filter((_, i) => i !== idx));
+    const next = answers.filter((_, i) => i !== idx);
+    onChange && onChange({ text, answers: next });
   }
 
   return (
@@ -37,7 +34,7 @@ export default function OpenAnswer({ qid, invalidField, initial, onChange }: Pro
           value={text}
           data-qid={qid}
           data-field="text"
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => onChange && onChange({ text: e.target.value, answers })}
         />
         {invalidField && invalidField.qid === (qid || 0) && invalidField.field === "text" && (
           <div className="invalid-feedback d-block app-error">{invalidField.message}</div>

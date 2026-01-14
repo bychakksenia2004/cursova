@@ -1,0 +1,80 @@
+import { NextResponse } from "next/server";
+import { connectToDB } from "../../../lib/mongodb";
+import Test from "../../../lib/models/Test";
+import { getUserFromCookieServer } from "../../../lib/auth";
+
+function mapType(frontType: string) {
+  switch (frontType) {
+    case "single":
+      return "single_choice";
+    case "multi":
+      return "multi_choice";
+    case "sequence":
+      return "sequence";
+    case "matching":
+      return "matching";
+    case "open":
+      return "open";
+    default:
+      return frontType;
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    await connectToDB();
+    const user = await getUserFromCookieServer();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const body = await req.json();
+    const { title, description, visibility, storeResponses, ownResultView, questions } = body;
+
+    if (!title || !String(title).trim()) return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    if (!Array.isArray(questions) || questions.length === 0) return NextResponse.json({ error: "At least one question required" }, { status: 400 });
+
+    // Transform questions to match schema discriminators
+    const transformed = questions.map((q: any) => {
+      const common: any = { id: q.id, type: mapType(q.type), text: q.text };
+      if (q.type === "single" || q.type === "multi") {
+        common.options = (q.data && q.data.options) || [];
+      } else if (q.type === "sequence") {
+        common.options = (q.data && q.data.options) || [];
+      } else if (q.type === "matching") {
+        common.pairs = (q.data && q.data.pairs) || [];
+      } else if (q.type === "open") {
+        common.answers = (q.data && q.data.answers) || [];
+      }
+      return common;
+    });
+
+    const created = await Test.create({
+      title: String(title).trim(),
+      description: description ? String(description) : null,
+      authorId: user._id,
+      visibility: visibility === "public" ? "public" : "private",
+      storeResponses: !!storeResponses,
+      ownResultView: ownResultView || "full",
+      questions: transformed,
+    });
+
+    return NextResponse.json({ ok: true, id: created._id }, { status: 201 });
+  } catch (err: any) {
+    console.error("/api/tests error:", err);
+    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    await connectToDB();
+    const user = await getUserFromCookieServer();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Return list of tests authored by user
+    const tests = await Test.find({ authorId: user._id }).select("title description").lean();
+    return NextResponse.json({ ok: true, tests }, { status: 200 });
+  } catch (err: any) {
+    console.error("/api/tests GET error:", err);
+    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+  }
+}
