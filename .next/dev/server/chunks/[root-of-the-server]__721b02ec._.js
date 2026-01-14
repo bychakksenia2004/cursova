@@ -170,6 +170,10 @@ const BaseQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f
     text: {
         type: String,
         required: true
+    },
+    imageUrl: {
+        type: String,
+        required: false
     }
 }, questionOpts);
 const SingleQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f$mongoose__$5b$external$5d$__$28$mongoose$2c$__cjs$29$__["default"].Schema({
@@ -296,6 +300,26 @@ const TestSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f$mongoos
             "nothing"
         ],
         default: "full"
+    },
+    timed: {
+        type: Boolean,
+        default: false
+    },
+    timeLimitMinutes: {
+        type: Number,
+        required: false
+    },
+    dateWindowEnabled: {
+        type: Boolean,
+        default: false
+    },
+    openFrom: {
+        type: Date,
+        required: false
+    },
+    openTo: {
+        type: Date,
+        required: false
     },
     questions: [
         BaseQuestionSchema
@@ -480,7 +504,7 @@ async function PUT(req, ctx) {
         const params = await ctx.params;
         const id = params?.id;
         const body = await req.json();
-        const { title, description, visibility, storeResponses, ownResultView, questions } = body;
+        const { title, description, visibility, storeResponses, ownResultView, questions, timed, timeLimitMinutes, dateWindowEnabled, openFrom, openTo } = body;
         const test = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].findById(id);
         if (!test) return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             error: "Not found"
@@ -497,6 +521,11 @@ async function PUT(req, ctx) {
         test.visibility = visibility === "public" ? "public" : "private";
         test.storeResponses = !!storeResponses;
         test.ownResultView = ownResultView || "full";
+        test.timed = !!timed;
+        test.timeLimitMinutes = typeof timeLimitMinutes === "number" ? timeLimitMinutes : timeLimitMinutes ? Number(timeLimitMinutes) : undefined;
+        test.dateWindowEnabled = !!dateWindowEnabled;
+        test.openFrom = openFrom ? new Date(openFrom) : undefined;
+        test.openTo = openTo ? new Date(openTo) : undefined;
         // Transform questions to match schema discriminators (map front-end types)
         function mapType(frontType) {
             switch(frontType){
@@ -520,6 +549,8 @@ async function PUT(req, ctx) {
                 type: mapType(q.type),
                 text: q.text
             };
+            // preserve optional imageUrl if provided from client
+            common.imageUrl = q.imageUrl || q.image && (q.image.secure_url || q.image.url) || undefined;
             if (q.type === "single" || q.type === "multi") common.options = q.data?.options || q.options || [];
             else if (q.type === "sequence") common.options = q.data?.options || q.options || [];
             else if (q.type === "matching") common.pairs = q.data?.pairs || q.pairs || [];
@@ -528,8 +559,10 @@ async function PUT(req, ctx) {
         });
         test.questions = transformed;
         await test.save();
+        const saved = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].findById(test._id).lean();
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-            ok: true
+            ok: true,
+            test: saved
         }, {
             status: 200
         });

@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { title, description, visibility, storeResponses, ownResultView, questions } = body;
+    const { title, description, visibility, storeResponses, ownResultView, questions, timed, timeLimitMinutes, dateWindowEnabled, openFrom, openTo } = body;
 
     if (!title || !String(title).trim()) return NextResponse.json({ error: "Title is required" }, { status: 400 });
     if (!Array.isArray(questions) || questions.length === 0) return NextResponse.json({ error: "At least one question required" }, { status: 400 });
@@ -35,6 +35,8 @@ export async function POST(req: Request) {
     // Transform questions to match schema discriminators
     const transformed = questions.map((q: any) => {
       const common: any = { id: q.id, type: mapType(q.type), text: q.text };
+      // preserve optional imageUrl if provided by client
+      common.imageUrl = q.imageUrl || (q.image && (q.image.secure_url || q.image.url)) || undefined;
       if (q.type === "single" || q.type === "multi") {
         common.options = (q.data && q.data.options) || [];
       } else if (q.type === "sequence") {
@@ -54,10 +56,17 @@ export async function POST(req: Request) {
       visibility: visibility === "public" ? "public" : "private",
       storeResponses: !!storeResponses,
       ownResultView: ownResultView || "full",
+      timed: !!timed,
+      timeLimitMinutes: typeof timeLimitMinutes === "number" ? timeLimitMinutes : (timeLimitMinutes ? Number(timeLimitMinutes) : undefined),
+      dateWindowEnabled: !!dateWindowEnabled,
+      openFrom: openFrom ? new Date(openFrom) : undefined,
+      openTo: openTo ? new Date(openTo) : undefined,
       questions: transformed,
     });
 
-    return NextResponse.json({ ok: true, id: created._id }, { status: 201 });
+    // return created document for easier verification
+    const saved = await Test.findById(created._id).lean();
+    return NextResponse.json({ ok: true, id: created._id, test: saved }, { status: 201 });
   } catch (err: any) {
     console.error("/api/tests error:", err);
     return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });

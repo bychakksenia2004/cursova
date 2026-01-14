@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import OpenAnswer from "../../components/testcomponents/OpenAnswer";
@@ -155,12 +156,82 @@ export default function NewTestPage() {
   }
 
   function updateQuestionType(qid: number, type: string) {
-    setQuestions((s) => s.map((q, idx) => (q.id === qid ? normalizeQuestion({ ...q, type }, idx) : q)));
+    setQuestions((s) => s.map((q, idx) => {
+      if (q.id !== qid) return q;
+      const out: any = { ...q, type };
+      out.data = out.data || {};
+      const baseId = Date.now() + idx;
+      if ((type === "single" || type === "multi") && !Array.isArray(out.data.options)) {
+        out.data.options = [ { id: baseId + 1, text: "", correct: false }, { id: baseId + 2, text: "", correct: false } ];
+      }
+      if (type === "sequence" && !Array.isArray(out.data.options)) {
+        out.data.options = [ { id: baseId + 1, text: "", order: 1 }, { id: baseId + 2, text: "", order: 2 } ];
+      }
+      if (type === "matching" && !Array.isArray(out.data.pairs)) {
+        out.data.pairs = [ { id: baseId + 1, left: "", right: "" }, { id: baseId + 2, left: "", right: "" } ];
+      }
+      if (type === "open" && !Array.isArray(out.data.answers)) {
+        out.data.answers = [""];
+      }
+      return normalizeQuestion(out, idx);
+    }));
   }
 
   function addQuestion() {
-    const q: any = { id: Date.now(), type: newQuestionType, text: "", data: {} };
+    const baseId = Date.now();
+    let data: any = {};
+    if (newQuestionType === "single" || newQuestionType === "multi") {
+      // create two empty options by default
+      data.options = [
+        { id: baseId + 1, text: "", correct: false },
+        { id: baseId + 2, text: "", correct: false },
+      ];
+    } else if (newQuestionType === "sequence") {
+      data.options = [
+        { id: baseId + 1, text: "", order: 1 },
+        { id: baseId + 2, text: "", order: 2 },
+      ];
+    } else if (newQuestionType === "matching") {
+      data.pairs = [
+        { id: baseId + 1, left: "", right: "" },
+        { id: baseId + 2, left: "", right: "" },
+      ];
+    } else if (newQuestionType === "open") {
+      data.answers = [""];
+    }
+    const q: any = { id: baseId, type: newQuestionType, text: "", data };
     setQuestions((s) => [...s, normalizeQuestion(q, s.length)]);
+  }
+
+  async function uploadToCloudinary(file: File) {
+    try {
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+      if (!cloudName || !uploadPreset) {
+        alert("Cloudinary not configured. Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET in your env.");
+        return null;
+      }
+      const form = new FormData();
+      form.append("file", file);
+      form.append("upload_preset", uploadPreset);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) {
+        console.error("Upload failed", await res.text());
+        return null;
+      }
+      const j = await res.json();
+      return j.secure_url || j.url || null;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }
+
+  function updateQuestionImage(qid: number, url: string | null) {
+    setQuestions((s) => s.map((q) => (q.id === qid ? { ...q, imageUrl: url || undefined } : q)));
   }
 
   const [title, setTitle] = useState("");
@@ -168,12 +239,18 @@ export default function NewTestPage() {
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [storeResponses, setStoreResponses] = useState<boolean>(true);
   const [ownResultView, setOwnResultView] = useState<"full" | "score_only" | "nothing">("full");
+  const [timed, setTimed] = useState<boolean>(false);
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | "">("");
+  const [dateWindowEnabled, setDateWindowEnabled] = useState<boolean>(false);
+  const [openFrom, setOpenFrom] = useState<string>("");
+  const [openTo, setOpenTo] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [questions, setQuestions] = useState<
-    Array<{ id: number; type: string; text: string; data?: any }>
+    Array<{ id: number; type: string; text: string; data?: any; imageUrl?: string }>
   >([]);
+  const [initialImageUrls, setInitialImageUrls] = useState<string[]>([]);
   const [invalidField, setInvalidField] = useState<null | { qid: number; field: string; idx?: number; message?: string }>(null);
   const DRAFT_KEY = "test_draft_v1";
   const [lastSaved, setLastSaved] = useState<number | null>(null);
@@ -229,6 +306,8 @@ export default function NewTestPage() {
       if (parsed && Object.prototype.hasOwnProperty.call(parsed, "visibility")) setVisibility(parsed.visibility ?? "public");
       if (parsed && Object.prototype.hasOwnProperty.call(parsed, "storeResponses") && typeof parsed.storeResponses === "boolean") setStoreResponses(parsed.storeResponses);
       if (parsed && Object.prototype.hasOwnProperty.call(parsed, "ownResultView")) setOwnResultView(parsed.ownResultView ?? "full");
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "timed")) setTimed(!!parsed.timed);
+      if (parsed && Object.prototype.hasOwnProperty.call(parsed, "timeLimitMinutes")) setTimeLimitMinutes(typeof parsed.timeLimitMinutes === "number" ? parsed.timeLimitMinutes : (parsed.timeLimitMinutes ?? ""));
       if (Array.isArray(parsed?.questions)) setQuestions(parsed.questions.map((q: any, i: number) => normalizeQuestion(q, i)));
       if (parsed && Object.prototype.hasOwnProperty.call(parsed, "lastSaved")) setLastSaved(parsed.lastSaved ?? null);
     } catch (err) {
@@ -256,6 +335,11 @@ export default function NewTestPage() {
               setVisibility(t.visibility || "public");
               setStoreResponses(!!t.storeResponses);
               setOwnResultView(t.ownResultView || "full");
+              setTimed(!!t.timed);
+              setTimeLimitMinutes(typeof t.timeLimitMinutes === "number" ? t.timeLimitMinutes : (t.timeLimitMinutes ?? ""));
+              setDateWindowEnabled(!!t.dateWindowEnabled);
+              setOpenFrom(t.openFrom ? String(new Date(t.openFrom).toISOString().slice(0, 16)) : "");
+              setOpenTo(t.openTo ? String(new Date(t.openTo).toISOString().slice(0, 16)) : "");
               // map server question types back to frontend
               const mapped = Array.isArray(t.questions) ? t.questions.map((q: any) => {
                 const mapBack = (stype: string) => {
@@ -274,9 +358,13 @@ export default function NewTestPage() {
                 else if (ftype === "sequence") dataObj.options = q.options || [];
                 else if (ftype === "matching") dataObj.pairs = q.pairs || [];
                 else if (ftype === "open") dataObj.answers = q.answers || [];
-                return { id: q.id || Date.now(), type: ftype, text: q.text || "", data: dataObj };
+                return { id: q.id || Date.now(), type: ftype, text: q.text || "", data: dataObj, imageUrl: q.imageUrl || (q.image && (q.image.secure_url || q.image.url)) || undefined };
               }) : [];
               setQuestions(mapped);
+              try {
+                const imgs = mapped.map((q: any) => q.imageUrl).filter(Boolean) as string[];
+                setInitialImageUrls(imgs);
+              } catch {}
             }
           } catch (err) {
             console.warn("Failed to load test for edit:", err);
@@ -307,6 +395,11 @@ export default function NewTestPage() {
         description,
         visibility,
         storeResponses,
+        timed,
+        timeLimitMinutes,
+        dateWindowEnabled,
+        openFrom,
+        openTo,
         ownResultView,
         questions,
         lastSaved: Date.now(),
@@ -329,6 +422,11 @@ export default function NewTestPage() {
     setDescription("");
     setVisibility("public");
     setStoreResponses(true);
+    setTimed(false);
+    setTimeLimitMinutes("");
+    setDateWindowEnabled(false);
+    setOpenFrom("");
+    setOpenTo("");
     setOwnResultView("full");
     setQuestions([]);
     setLastSaved(null);
@@ -357,6 +455,29 @@ export default function NewTestPage() {
     if (!questions || questions.length === 0) {
       setError("Додайте принаймні одне питання");
       return false;
+    }
+
+    // validate timing if enabled
+    if (timed) {
+      const n = typeof timeLimitMinutes === "number" ? timeLimitMinutes : (timeLimitMinutes ? Number(timeLimitMinutes) : NaN);
+      if (!Number.isFinite(n) || n <= 0) {
+        setError("Вкажіть коректну тривалість тесту у хвилинах");
+        return false;
+      }
+    }
+
+    // validate date window if enabled
+    if (dateWindowEnabled) {
+      if (!openFrom || !openTo) {
+        setError("Вкажіть дати початку та кінця відкритості тесту");
+        return false;
+      }
+      const f = new Date(openFrom);
+      const t = new Date(openTo);
+      if (isNaN(f.getTime()) || isNaN(t.getTime()) || f.getTime() > t.getTime()) {
+        setError("Некоректні дати: початок має бути раніше або рівним кінцю");
+        return false;
+      }
     }
 
     let firstInvalidSelector: string | null = null;
@@ -480,12 +601,45 @@ export default function NewTestPage() {
     // title validation now handled in validateQuestions()
     setLoading(true);
     try {
+      // If editing, delete any images that existed in the original test but were removed now
+      if (editId && Array.isArray(initialImageUrls) && initialImageUrls.length > 0) {
+        const currentUrls = questions.map((q) => q.imageUrl).filter(Boolean) as string[];
+        const removed = initialImageUrls.filter((u) => !currentUrls.includes(u));
+        if (removed.length > 0) {
+          const failures: string[] = [];
+          for (const url of removed) {
+            try {
+              const res = await fetch(`/api/cloudinary/delete`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ imageUrl: url }),
+              });
+              if (!res.ok) {
+                const txt = await res.text().catch(() => undefined);
+                failures.push(`${url} -> ${txt || res.status}`);
+              }
+            } catch (err) {
+              failures.push(`${url} -> ${String(err)}`);
+            }
+          }
+          if (failures.length > 0) {
+            setLoading(false);
+            alert("Не вдалося видалити старі зображення:\n" + failures.join("\n"));
+            return;
+          }
+        }
+      }
       let res: Response;
       const payload = {
         title,
         description,
         visibility,
         storeResponses,
+        timed,
+        timeLimitMinutes: typeof timeLimitMinutes === "number" ? timeLimitMinutes : (timeLimitMinutes ? Number(timeLimitMinutes) : undefined),
+        dateWindowEnabled,
+        openFrom: openFrom || undefined,
+        openTo: openTo || undefined,
         ownResultView,
         questions,
       };
@@ -657,6 +811,49 @@ export default function NewTestPage() {
           </div>
         </div>
 
+        <div className="mb-3">
+          <label className="form-label d-block">Налаштування часу</label>
+          <div className="form-check form-switch mb-2">
+            <input className="form-check-input" type="checkbox" role="switch" id="timedSwitch" checked={timed} onChange={(e) => setTimed(e.target.checked)} />
+            <label className="form-check-label" htmlFor="timedSwitch">Обмежений час проходження</label>
+          </div>
+          {timed && (
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <div style={{ width: 220 }}>
+                <input
+                  type="number"
+                  min={1}
+                  className="form-control"
+                  value={timeLimitMinutes as any}
+                  onChange={(e) => setTimeLimitMinutes(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="Тривалість (хвилин)"
+                />
+              </div>
+              <div className="form-text">Вкажіть тривалість тесту в хвилинах.</div>
+            </div>
+          )}
+
+          <hr />
+
+          <div className="form-check form-switch mb-2">
+            <input className="form-check-input" type="checkbox" role="switch" id="dateWindowSwitch" checked={dateWindowEnabled} onChange={(e) => setDateWindowEnabled(e.target.checked)} />
+            <label className="form-check-label" htmlFor="dateWindowSwitch">Обмежити доступ датами</label>
+          </div>
+          {dateWindowEnabled && (
+            <div className="d-flex flex-column gap-2">
+              <div className="d-flex align-items-center gap-2">
+                <label className="form-label mb-0" style={{ width: 120 }}>Від</label>
+                <input type="datetime-local" className="form-control" value={openFrom} onChange={(e) => setOpenFrom(e.target.value)} />
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                <label className="form-label mb-0" style={{ width: 120 }}>До</label>
+                <input type="datetime-local" className="form-control" value={openTo} onChange={(e) => setOpenTo(e.target.value)} />
+              </div>
+              <div className="form-text">Коли увімкнено — тест буде доступний лише в проміжку часу.</div>
+            </div>
+          )}
+        </div>
+
         <div className="mb-3 questions-section">
           <h3 className="mb-2 text-center">Питання</h3>
           
@@ -696,6 +893,72 @@ export default function NewTestPage() {
                   {invalidField && invalidField.qid === q.id && invalidField.field === "text" && (
                     <div className="invalid-feedback d-block app-error">{invalidField.message}</div>
                   )}
+                  <div className="mt-2 d-flex align-items-center gap-2">
+                    <div>
+                      <label className="form-label mb-1">Зображення (опціонально)</label>
+                      <div className="d-flex gap-2 align-items-center">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            try {
+                              // if existing image present, delete it from cloud first
+                              if (q.imageUrl) {
+                                try {
+                                  await fetch(`/api/cloudinary/delete`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ imageUrl: q.imageUrl }),
+                                  });
+                                } catch (err) {
+                                  console.warn("Failed to delete previous image:", err);
+                                }
+                              }
+                              const url = await uploadToCloudinary(f);
+                              if (url) updateQuestionImage(q.id, url);
+                            } catch (err) {
+                              console.error(err);
+                              alert("Не вдалося завантажити зображення");
+                            }
+                          }}
+                        />
+                        {q.imageUrl ? (
+                          <div style={{ maxWidth: 140 }}>
+                            <img src={q.imageUrl} alt="preview" style={{ width: "100%", borderRadius: 8 }} />
+                            <div className="mt-1">
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={async () => {
+                                  try {
+                                    if (q.imageUrl) {
+                                      const res = await fetch(`/api/cloudinary/delete`, {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ imageUrl: q.imageUrl }),
+                                      });
+                                      if (!res.ok) {
+                                        const txt = await res.text().catch(() => undefined);
+                                        alert("Не вдалося видалити зображення на сервері: " + (txt || res.status));
+                                        return;
+                                      }
+                                    }
+                                  } catch (err) {
+                                    console.warn("Failed to delete image on server:", err);
+                                    alert("Не вдалося видалити зображення на сервері");
+                                    return;
+                                  }
+                                  updateQuestionImage(q.id, null);
+                                }}
+                              >Видалити</button>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
                 </>
               )}
               {q.type === "open" && (

@@ -1,7 +1,12 @@
 {
+  "/api/cloudinary/delete/route": "app/api/cloudinary/delete/route.js",
   "/api/me/route": "app/api/me/route.js",
   "/api/public-tests/[id]/route": "app/api/public-tests/[id]/route.js",
   "/api/public-tests/route": "app/api/public-tests/route.js",
+  "/api/tests/[id]/route": "app/api/tests/[id]/route.js",
+  "/api/tests/route": "app/api/tests/route.js",
+  "/editor/new/page": "app/editor/new/page.js",
+  "/editor/page": "app/editor/page.js",
   "/page": "app/page.js",
   "/tests/[id]/page": "app/tests/[id]/page.js",
   "/tests/[id]/take/page": "app/tests/[id]/take/page.js",

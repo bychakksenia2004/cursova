@@ -170,6 +170,10 @@ const BaseQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f
     text: {
         type: String,
         required: true
+    },
+    imageUrl: {
+        type: String,
+        required: false
     }
 }, questionOpts);
 const SingleQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f$mongoose__$5b$external$5d$__$28$mongoose$2c$__cjs$29$__["default"].Schema({
@@ -297,6 +301,26 @@ const TestSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f$mongoos
         ],
         default: "full"
     },
+    timed: {
+        type: Boolean,
+        default: false
+    },
+    timeLimitMinutes: {
+        type: Number,
+        required: false
+    },
+    dateWindowEnabled: {
+        type: Boolean,
+        default: false
+    },
+    openFrom: {
+        type: Date,
+        required: false
+    },
+    openTo: {
+        type: Date,
+        required: false
+    },
     questions: [
         BaseQuestionSchema
     ]
@@ -328,7 +352,7 @@ async function GET(req) {
         // find public tests and include author's username
         const tests = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].find({
             visibility: "public"
-        }).select("title description authorId").populate({
+        }).select("title description authorId timed timeLimitMinutes").populate({
             path: "authorId",
             select: "username"
         }).lean();
@@ -336,7 +360,9 @@ async function GET(req) {
                 _id: t._id,
                 title: t.title,
                 description: t.description,
-                author: t.authorId?.username || null
+                author: t.authorId?.username || null,
+                timed: !!t.timed,
+                timeLimitMinutes: t.timeLimitMinutes ?? null
             })) : [];
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             ok: true,

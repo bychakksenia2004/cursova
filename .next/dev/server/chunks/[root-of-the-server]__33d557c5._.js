@@ -170,6 +170,10 @@ const BaseQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f
     text: {
         type: String,
         required: true
+    },
+    imageUrl: {
+        type: String,
+        required: false
     }
 }, questionOpts);
 const SingleQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f$mongoose__$5b$external$5d$__$28$mongoose$2c$__cjs$29$__["default"].Schema({
@@ -296,6 +300,26 @@ const TestSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f$mongoos
             "nothing"
         ],
         default: "full"
+    },
+    timed: {
+        type: Boolean,
+        default: false
+    },
+    timeLimitMinutes: {
+        type: Number,
+        required: false
+    },
+    dateWindowEnabled: {
+        type: Boolean,
+        default: false
+    },
+    openFrom: {
+        type: Date,
+        required: false
+    },
+    openTo: {
+        type: Date,
+        required: false
     },
     questions: [
         BaseQuestionSchema
@@ -455,7 +479,7 @@ async function POST(req) {
             status: 401
         });
         const body = await req.json();
-        const { title, description, visibility, storeResponses, ownResultView, questions } = body;
+        const { title, description, visibility, storeResponses, ownResultView, questions, timed, timeLimitMinutes, dateWindowEnabled, openFrom, openTo } = body;
         if (!title || !String(title).trim()) return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             error: "Title is required"
         }, {
@@ -473,6 +497,8 @@ async function POST(req) {
                 type: mapType(q.type),
                 text: q.text
             };
+            // preserve optional imageUrl if provided by client
+            common.imageUrl = q.imageUrl || q.image && (q.image.secure_url || q.image.url) || undefined;
             if (q.type === "single" || q.type === "multi") {
                 common.options = q.data && q.data.options || [];
             } else if (q.type === "sequence") {
@@ -491,11 +517,19 @@ async function POST(req) {
             visibility: visibility === "public" ? "public" : "private",
             storeResponses: !!storeResponses,
             ownResultView: ownResultView || "full",
+            timed: !!timed,
+            timeLimitMinutes: typeof timeLimitMinutes === "number" ? timeLimitMinutes : timeLimitMinutes ? Number(timeLimitMinutes) : undefined,
+            dateWindowEnabled: !!dateWindowEnabled,
+            openFrom: openFrom ? new Date(openFrom) : undefined,
+            openTo: openTo ? new Date(openTo) : undefined,
             questions: transformed
         });
+        // return created document for easier verification
+        const saved = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].findById(created._id).lean();
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             ok: true,
-            id: created._id
+            id: created._id,
+            test: saved
         }, {
             status: 201
         });

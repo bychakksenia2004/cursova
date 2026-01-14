@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///D:/magistrature/Dockerwork/kursova/app/components/StartTestButton.tsx"],"sourcesContent":["\"use client\";\r\nimport React from \"react\";\r\n\r\nexport default function StartTestButton({ id }: { id: string }) {\r\n  function handleStart(e: React.MouseEvent) {\r\n    try {\r\n      localStorage.setItem(`test_start_${id}`, String(Date.now()));\r\n    } catch {}\r\n    // navigate to take page\r\n    window.location.href = `/tests/${id}/take`;\r\n  }\r\n\r\n  return (\r\n    <button className=\"btn btn-primary\" onClick={handleStart}>Розпочати тест</button>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;AAAA;;AAGe,SAAS,gBAAgB,EAAE,EAAE,EAAkB;IAC5D,SAAS,YAAY,CAAmB;QACtC,IAAI;YACF,aAAa,OAAO,CAAC,CAAC,WAAW,EAAE,IAAI,EAAE,OAAO,KAAK,GAAG;QAC1D,EAAE,OAAM,CAAC;QACT,wBAAwB;QACxB,OAAO,QAAQ,CAAC,IAAI,GAAG,CAAC,OAAO,EAAE,GAAG,KAAK,CAAC;IAC5C;IAEA,qBACE,8OAAC;QAAO,WAAU;QAAkB,SAAS;kBAAa;;;;;;AAE9D"}}]
+}

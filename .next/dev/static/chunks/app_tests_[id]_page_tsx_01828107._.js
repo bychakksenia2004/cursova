@@ -1,5 +1,7 @@
 (globalThis.TURBOPACK_CHUNK_LISTS || (globalThis.TURBOPACK_CHUNK_LISTS = [])).push({
     script: typeof document === "object" ? document.currentScript : undefined,
-    chunks: [],
+    chunks: [
+  "static/chunks/app_components_StartTestButton_tsx_529c7f4e._.js"
+],
     source: "dynamic"
 });

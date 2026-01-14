@@ -1,6 +1,7 @@
 import { connectToDB } from "../../../lib/mongodb";
 import Test from "../../../lib/models/Test";
 import Link from "next/link";
+import StartTestButton from "../../components/StartTestButton";
 
 export default async function Page(ctx: any) {
   try {
@@ -11,6 +12,13 @@ export default async function Page(ctx: any) {
     const test = await Test.findById(String(id)).populate({ path: "authorId", select: "username" }).lean();
     if (!test) return <div className="container min-vh-100">Тест не знайдено.</div>;
 
+    // determine availability based on date window
+    const now = new Date();
+    const windowEnabled = !!test.dateWindowEnabled;
+    const openFrom = test.openFrom ? new Date(test.openFrom) : null;
+    const openTo = test.openTo ? new Date(test.openTo) : null;
+    const inWindow = !windowEnabled || ((openFrom ? now >= openFrom : true) && (openTo ? now <= openTo : true));
+
     return (
       <div className="container d-flex flex-column align-items-center min-vh-100">
         <h2 className="mb-3">{test.title}</h2>
@@ -20,10 +28,30 @@ export default async function Page(ctx: any) {
           <div className="mb-3">
             <div className="fw-semibold">Кількість питань: {Array.isArray(test.questions) ? test.questions.length : 0}</div>
           </div>
+          <div className="mb-3">
+            <div className="fw-semibold">Доступність тесту</div>
+            {windowEnabled ? (
+              <div className="text-muted">
+                Від: {openFrom ? openFrom.toLocaleString() : "(не вказано)"} — До: {openTo ? openTo.toLocaleString() : "(не вказано)"}
+              </div>
+            ) : (
+              <div className="text-muted">Тест доступний без обмежень за датою.</div>
+            )}
+          </div>
+          <div className="mb-3">
+            <div className="fw-semibold">Час на проходження</div>
+            {test.timed ? (
+              <div className="text-muted">Обмежено: {test.timeLimitMinutes || "(не вказано)"} хвилин</div>
+            ) : (
+              <div className="text-muted">Час не обмежений.</div>
+            )}
+          </div>
           <div className="mt-3 d-flex gap-2">
-            <Link href={`/tests/${id}/take`}>
-              <button className="btn btn-primary">Розпочати тест</button>
-            </Link>
+            {inWindow ? (
+              <StartTestButton id={String(id)} />
+            ) : (
+              <button className="btn btn-secondary" disabled>Тест недоступний зараз</button>
+            )}
             <Link href="/tests">
               <button className="btn btn-outline-secondary">Назад до списку</button>
             </Link>

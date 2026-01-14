@@ -29,7 +29,7 @@ export async function PUT(req: Request, ctx: any) {
     const params = await ctx.params;
     const id = params?.id;
     const body = await req.json();
-    const { title, description, visibility, storeResponses, ownResultView, questions } = body;
+    const { title, description, visibility, storeResponses, ownResultView, questions, timed, timeLimitMinutes, dateWindowEnabled, openFrom, openTo } = body;
 
     const test = await Test.findById(id);
     if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -40,6 +40,11 @@ export async function PUT(req: Request, ctx: any) {
     test.visibility = visibility === "public" ? "public" : "private";
     test.storeResponses = !!storeResponses;
     test.ownResultView = ownResultView || "full";
+    test.timed = !!timed;
+    test.timeLimitMinutes = typeof timeLimitMinutes === "number" ? timeLimitMinutes : (timeLimitMinutes ? Number(timeLimitMinutes) : undefined);
+    test.dateWindowEnabled = !!dateWindowEnabled;
+    test.openFrom = openFrom ? new Date(openFrom) : undefined;
+    test.openTo = openTo ? new Date(openTo) : undefined;
 
     // Transform questions to match schema discriminators (map front-end types)
     function mapType(frontType: string) {
@@ -61,6 +66,8 @@ export async function PUT(req: Request, ctx: any) {
 
     const transformed = (Array.isArray(questions) ? questions : []).map((q: any) => {
       const common: any = { id: q.id, type: mapType(q.type), text: q.text };
+      // preserve optional imageUrl if provided from client
+      common.imageUrl = q.imageUrl || (q.image && (q.image.secure_url || q.image.url)) || undefined;
       if (q.type === "single" || q.type === "multi") common.options = q.data?.options || q.options || [];
       else if (q.type === "sequence") common.options = q.data?.options || q.options || [];
       else if (q.type === "matching") common.pairs = q.data?.pairs || q.pairs || [];
@@ -69,8 +76,8 @@ export async function PUT(req: Request, ctx: any) {
     });
     test.questions = transformed as any;
     await test.save();
-
-    return NextResponse.json({ ok: true }, { status: 200 });
+    const saved = await Test.findById(test._id).lean();
+    return NextResponse.json({ ok: true, test: saved }, { status: 200 });
   } catch (err: any) {
     console.error("/api/tests/[id] PUT error:", err);
     return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });

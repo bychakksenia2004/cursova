@@ -170,6 +170,10 @@ const BaseQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f
     text: {
         type: String,
         required: true
+    },
+    imageUrl: {
+        type: String,
+        required: false
     }
 }, questionOpts);
 const SingleQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f$mongoose__$5b$external$5d$__$28$mongoose$2c$__cjs$29$__["default"].Schema({
@@ -296,6 +300,26 @@ const TestSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f$mongoos
             "nothing"
         ],
         default: "full"
+    },
+    timed: {
+        type: Boolean,
+        default: false
+    },
+    timeLimitMinutes: {
+        type: Number,
+        required: false
+    },
+    dateWindowEnabled: {
+        type: Boolean,
+        default: false
+    },
+    openFrom: {
+        type: Date,
+        required: false
+    },
+    openTo: {
+        type: Date,
+        required: false
     },
     questions: [
         BaseQuestionSchema

@@ -5,6 +5,7 @@ type QBase = {
   id: number;
   type: "single_choice" | "multi_choice" | "sequence" | "matching" | "open";
   text: string;
+  imageUrl?: string;
 };
 
 type SingleOption = { id: number; text: string; correct: boolean };
@@ -24,6 +25,11 @@ export interface ITest extends Document {
   visibility: "private" | "public";
   storeResponses: boolean;
   ownResultView: "full" | "score_only" | "nothing";
+  timed?: boolean;
+  timeLimitMinutes?: number | null;
+  dateWindowEnabled?: boolean;
+  openFrom?: Date | null;
+  openTo?: Date | null;
   questions: Array<SingleQuestion | MultiQuestion | SequenceQuestion | MatchingQuestion | OpenQuestion>;
 }
 
@@ -35,6 +41,7 @@ const BaseQuestionSchema = new mongoose.Schema(
     id: { type: Number, required: true },
     type: { type: String, required: true },
     text: { type: String, required: true },
+    imageUrl: { type: String, required: false },
   },
   questionOpts
 );
@@ -111,6 +118,11 @@ const TestSchema = new mongoose.Schema<ITest>(
     visibility: { type: String, enum: ["private", "public"], default: "private" },
     storeResponses: { type: Boolean, default: false },
     ownResultView: { type: String, enum: ["full", "score_only", "nothing"], default: "full" },
+    timed: { type: Boolean, default: false },
+    timeLimitMinutes: { type: Number, required: false },
+    dateWindowEnabled: { type: Boolean, default: false },
+    openFrom: { type: Date, required: false },
+    openTo: { type: Date, required: false },
     questions: [BaseQuestionSchema],
   }
 );
