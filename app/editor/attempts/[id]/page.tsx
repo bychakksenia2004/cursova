@@ -54,7 +54,7 @@ export default function AttemptsPage() {
       <div className="menu-box w-100">
         <div className="d-flex gap-2 mb-3">
           <input className="form-control" placeholder="Пошук за ім'ям користувача" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
-          <Link href="/editor"><button className="btn btn-outline-secondary">Назад</button></Link>
+          <Link href="/editor" className="btn btn-outline-secondary">Назад</Link>
         </div>
         {loading ? (
           <div className="text-muted">Завантаження...</div>

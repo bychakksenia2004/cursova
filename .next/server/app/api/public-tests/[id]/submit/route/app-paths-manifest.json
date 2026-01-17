@@ -1,0 +1,3 @@
+{
+  "/api/public-tests/[id]/submit/route": "app/api/public-tests/[id]/submit/route.js"
+}

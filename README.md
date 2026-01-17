@@ -1,4 +1,54 @@
-﻿# TestHub — Next.js application
+﻿# TestHub — Next.js application (dev-only)
+
+This repository contains a Next.js (App Router) application used for creating and running tests.
+
+Use the development workflow below — production Docker setup has been removed.
+
+## Project layout (important files)
+
+- `app/` — the Next.js application (pages, API routes under `app/api`).
+- `lib/` — helpers and Mongoose models (`Test`, `Attempt`, `User`).
+- `public/` — static assets.
+- `package.json`, `tsconfig.json` — project config and scripts.
+- `Dockerfile.dev` — development Docker image (if present).
+- `docker-compose.dev.yml` — development compose helper.
+
+Key app folders:
+
+- `app/editor` — editor UI (create/edit tests).
+- `app/tests` — public tests listing and test-taking pages.
+- `app/history` — attempt history and per-attempt pages.
+
+## Local development
+
+Install dependencies and run the dev server locally:
+
+```bash
+npm install
+npm run dev
+# open http://localhost:3000
+```
+
+## Docker-based development (containerized)
+
+If you prefer running in Docker for development, use the dev compose which mounts your working tree and provides a `node_modules` named volume:
+
+```bash
+docker-compose -f docker-compose.dev.yml up --build
+```
+
+Notes for dev compose:
+
+- Host code is mounted into the container to enable quick edits.
+- A named volume `node_modules` is used so container-installed dependencies do not overwrite the host.
+- `WATCHPACK_POLLING=true` may be set in the dev service to improve file-watch reliability on some hosts.
+
+## Removed
+
+- Production Dockerfile and production `docker-compose.yml` have been removed to simplify the repository — use the dev workflow above.
+
+If you want the production setup restored later, I can add a simplified, tested production flow on request.
+# TestHub — Next.js application
 
 This repository contains a Next.js application (app router) used for creating and running tests.
 

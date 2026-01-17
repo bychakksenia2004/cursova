@@ -37,7 +37,7 @@ export async function connectToDB(): Promise<typeof mongoose> {
           "Не вдалося підключитися до MongoDB.",
           "Перевірте MONGODB_URL у d:\\magistrature\\Dockerwork\\kursova\\.env.local,",
           "переконайтесь, що кластер працює, та що ваш IP добавлений в Network Access (whitelist) в Atlas.",
-          `Оригінальна помилка: ${err?.message ?? String(err)}`
+          `Оригінальна помилка: ${(err as any)?.message ?? String(err)}`
         ].join(" ");
 
         // Додаткова діагностика для mongodb+srv (DNS SRV)
@@ -52,17 +52,17 @@ export async function connectToDB(): Promise<typeof mongoose> {
                 const srv = await dns.resolveSrv(`_mongodb._tcp.${host}`);
                 diag += ` DNS SRV records: ${JSON.stringify(srv)}.`;
               } catch (srvErr) {
-                diag += ` DNS SRV lookup failed: ${srvErr?.message ?? String(srvErr)}.`;
+                diag += ` DNS SRV lookup failed: ${(srvErr as any)?.message ?? String(srvErr)}.`;
               }
 
               try {
                 const lookup = await dns.lookup(host);
                 diag += ` DNS lookup: ${JSON.stringify(lookup)}.`;
               } catch (lookupErr) {
-                diag += ` DNS lookup failed: ${lookupErr?.message ?? String(lookupErr)}.`;
+                diag += ` DNS lookup failed: ${(lookupErr as any)?.message ?? String(lookupErr)}.`;
               }
             } catch (parseErr) {
-              diag += ` Failed to parse URL for additional diagnostics: ${parseErr?.message ?? String(parseErr)}.`;
+              diag += ` Failed to parse URL for additional diagnostics: ${(parseErr as any)?.message ?? String(parseErr)}.`;
             }
           } else {
             // Для звичайних mongodb:// хостів також можна зробити dns.lookup
@@ -73,14 +73,14 @@ export async function connectToDB(): Promise<typeof mongoose> {
                 const lookup = await dns.lookup(host);
                 diag += ` DNS lookup: ${JSON.stringify(lookup)}.`;
               } catch (lookupErr) {
-                diag += ` DNS lookup failed: ${lookupErr?.message ?? String(lookupErr)}.`;
+                diag += ` DNS lookup failed: ${(lookupErr as any)?.message ?? String(lookupErr)}.`;
               }
             } catch {
               // нічого
             }
           }
         } catch (diagErr) {
-          diag += ` (diagnostics failed: ${diagErr?.message ?? String(diagErr)})`;
+          diag += ` (diagnostics failed: ${(diagErr as any)?.message ?? String(diagErr)})`;
         }
 
         // Кидаємо нову помилку з детальною діагностикою

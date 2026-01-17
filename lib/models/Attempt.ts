@@ -17,7 +17,7 @@ const AttemptSchema = new mongoose.Schema<IAttempt>(
     answers: { type: mongoose.Schema.Types.Mixed, required: false },
     totalScore: { type: Number, required: true },
     totalPossible: { type: Number, required: true },
-    perQuestion: { type: Array, required: true },
+    perQuestion: { type: [mongoose.Schema.Types.Mixed as any], required: true },
     createdAt: { type: Date, default: () => new Date() },
   },
   { timestamps: false }

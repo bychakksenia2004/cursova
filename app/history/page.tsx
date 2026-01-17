@@ -58,7 +58,7 @@ export default function HistoryPage() {
           <input className="form-control" placeholder="Пошук за автором" value={author} onChange={(e) => { setAuthor(e.target.value); setPage(1); }} />
           <input className="form-control" type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPage(1); }} placeholder="Від" />
           <input className="form-control" type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPage(1); }} placeholder="До" />
-          <Link href="/"><button className="btn btn-outline-secondary">Назад</button></Link>
+          <Link href="/" className="btn btn-outline-secondary">Назад</Link>
         </div>
         {loading ? (
           <div className="text-muted">Завантаження...</div>

@@ -43,9 +43,7 @@ export default function Editor() {
     <div className="container d-flex flex-column align-items-center justify-content-center min-vh-100">
       <h2 className="mb-4 text-center">Редактор тестів</h2>
       <div className="menu-box d-flex flex-column gap-2">
-        <Link href="/editor/new">
-          <a className="btn btn-primary w-100">Додати новий тест</a>
-        </Link>
+        <Link href="/editor/new" className="btn btn-primary w-100">Додати новий тест</Link>
         <div className="mt-2">
           <input className="form-control" placeholder="Пошук за назвою тесту..." value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
         </div>
@@ -64,13 +62,9 @@ export default function Editor() {
                     {t.description ? <div className="text-muted small">{t.description}</div> : null}
                   </div>
                   <div>
-                    <Link href={`/editor/new?edit=${t._id}`}>
-                      <a className="btn btn-sm btn-outline-primary">Редагувати</a>
-                    </Link>
+                    <Link href={`/editor/new?edit=${t._id}`} className="btn btn-sm btn-outline-primary">Редагувати</Link>
                     {t.storeResponses ? (
-                      <Link href={`/editor/attempts/${t._id}`}>
-                        <a className="btn btn-sm btn-outline-secondary ms-2">Проходження</a>
-                      </Link>
+                      <Link href={`/editor/attempts/${t._id}`} className="btn btn-sm btn-outline-secondary ms-2">Проходження</Link>
                     ) : null}
                     <button
                       className="btn btn-sm btn-outline-danger ms-2"

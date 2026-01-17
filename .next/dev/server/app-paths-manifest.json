@@ -1,4 +1,8 @@
 {
   "/api/me/route": "app/api/me/route.js",
-  "/page": "app/page.js"
+  "/api/public-tests/route": "app/api/public-tests/route.js",
+  "/api/tests/route": "app/api/tests/route.js",
+  "/editor/page": "app/editor/page.js",
+  "/page": "app/page.js",
+  "/tests/page": "app/tests/page.js"
 }

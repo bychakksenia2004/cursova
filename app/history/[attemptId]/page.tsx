@@ -18,7 +18,7 @@ export default async function AttemptDetailPage({ params }: Props) {
         <h2 className="mb-3">Потрібно увійти</h2>
         <div className="menu-box w-100">
           <div className="alert alert-warning">Щоб переглянути свої відповіді, будь ласка, увійдіть.</div>
-          <div className="mt-2"><Link href="/login"><button className="btn btn-primary">Увійти</button></Link></div>
+          <div className="mt-2"><Link href="/login" className="btn btn-primary">Увійти</Link></div>
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ export default async function AttemptDetailPage({ params }: Props) {
         <div className="menu-box w-100">
           <div className="alert alert-warning">Спроба з id <strong>{attemptId}</strong> не знайдена в базі даних.</div>
           <div className="mb-2 text-muted">Перевірте, що записи збережуються при проходженні тесту та що id правильно передається.</div>
-          <div className="mt-2"><Link href="/history"><button className="btn btn-outline-secondary">Назад</button></Link></div>
+          <div className="mt-2"><Link href="/history" className="btn btn-outline-secondary">Назад</Link></div>
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ export default async function AttemptDetailPage({ params }: Props) {
         <h2 className="mb-3">Доступ заборонено</h2>
         <div className="menu-box w-100">
           <div className="alert alert-danger">Ви можете переглядати лише власні спроби або як автор тесту.</div>
-          <div className="mt-2"><Link href="/history"><button className="btn btn-outline-secondary">Назад</button></Link></div>
+          <div className="mt-2"><Link href="/history" className="btn btn-outline-secondary">Назад</Link></div>
         </div>
       </div>
     );
@@ -112,7 +112,7 @@ export default async function AttemptDetailPage({ params }: Props) {
         <h2 className="mb-3">Тест видалено</h2>
         <div className="menu-box w-100">
           <div className="alert alert-warning">Цей тест було видалено, але спроба все ще збережена.</div>
-          <div className="mt-2"><Link href="/history"><button className="btn btn-outline-secondary">Назад</button></Link></div>
+          <div className="mt-2"><Link href="/history" className="btn btn-outline-secondary">Назад</Link></div>
         </div>
       </div>
     );
@@ -129,7 +129,7 @@ export default async function AttemptDetailPage({ params }: Props) {
         <h2 className="mb-3">Доступ заборонено</h2>
         <div className="menu-box w-100">
           <div className="alert alert-danger">Власник тесту заборонив перегляд результатів цього тесту.</div>
-          <div className="mt-2"><Link href="/history"><button className="btn btn-outline-secondary">Назад</button></Link></div>
+          <div className="mt-2"><Link href="/history" className="btn btn-outline-secondary">Назад</Link></div>
         </div>
       </div>
     );
@@ -230,7 +230,7 @@ export default async function AttemptDetailPage({ params }: Props) {
         })}
 
         <div className="d-flex gap-2">
-          <Link href="/history"><button className="btn btn-outline-secondary">Назад до історії</button></Link>
+          <Link href="/history" className="btn btn-outline-secondary">Назад до історії</Link>
         </div>
       </div>
     </div>

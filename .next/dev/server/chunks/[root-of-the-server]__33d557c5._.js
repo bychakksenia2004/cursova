@@ -558,13 +558,26 @@ async function GET(req) {
         }, {
             status: 401
         });
-        // Return list of tests authored by user (include storeResponses flag)
-        const tests = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].find({
+        // pagination params
+        const url = new URL(req.url);
+        const page = Math.max(1, Number(url.searchParams.get("page") || "1"));
+        const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") || "10")));
+        const skip = (page - 1) * limit;
+        // Return paginated list of tests authored by user (include storeResponses flag)
+        const baseQuery = {
             authorId: user._id
-        }).select("title description storeResponses").lean();
+        };
+        const total = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].countDocuments(baseQuery);
+        const tests = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].find(baseQuery).select("title description storeResponses").sort({
+            _id: -1
+        }).skip(skip).limit(limit).lean();
+        const totalPages = Math.max(1, Math.ceil(total / limit));
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             ok: true,
-            tests
+            tests,
+            total,
+            page,
+            totalPages
         }, {
             status: 200
         });

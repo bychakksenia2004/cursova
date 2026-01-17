@@ -613,7 +613,28 @@ async function POST(req, ctx) {
             totalScore += score;
         }
         totalScore = Math.round((totalScore + Number.EPSILON) * 1000) / 1000;
-        // Save attempt record (always saved regardless of storeResponses setting)
+        // If responses are not stored and the taker is anonymous, do NOT persist the attempt.
+        // Instead, return the computed results according to the test's ownResultView setting.
+        if (!viewer && !test.storeResponses) {
+            const ownView = test.ownResultView || "full";
+            const resp = {
+                ok: true
+            };
+            if (ownView === "full") {
+                resp.totalScore = totalScore;
+                resp.totalPossible = totalPossible;
+                resp.perQuestion = perQuestion;
+            } else if (ownView === "score_only") {
+                resp.totalScore = totalScore;
+                resp.totalPossible = totalPossible;
+            } else {
+            // 'nothing' -> do not reveal totals or answers
+            }
+            return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json(resp, {
+                status: 200
+            });
+        }
+        // Save attempt record for authenticated users (or when storeResponses is enabled)
         let createdAttempt = null;
         try {
             // Prevent duplicate attempts for authenticated users: if a recent attempt

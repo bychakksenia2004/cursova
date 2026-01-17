@@ -93,21 +93,13 @@ export default function Home() {
       </div>
 
       <div className="card p-4 shadow-sm text-center app-card menu-box">
-        <Link href="/tests">
-          <button className="btn btn-outline-dark w-100 mb-2">Список публічних тестів</button>
-        </Link>
-        <Link href="/run">
-          <button className="btn btn-outline-dark w-100 mb-2">Пройти тест за кодом</button>
-        </Link>
+        <Link href="/tests" className="btn btn-outline-dark w-100 mb-2">Список публічних тестів</Link>
+        <Link href="/run" className="btn btn-outline-dark w-100 mb-2">Пройти тест за кодом</Link>
 
         {isAuth && (
           <>
-            <Link href="/history">
-              <button className="btn btn-outline-dark w-100 mb-2">Історія тестувань</button>
-            </Link>
-            <Link href="/editor">
-              <button className="btn btn-outline-dark w-100 mb-2">Мої тести</button>
-            </Link>
+            <Link href="/history" className="btn btn-outline-dark w-100 mb-2">Історія тестувань</Link>
+            <Link href="/editor" className="btn btn-outline-dark w-100 mb-2">Мої тести</Link>
           </>
         )}
 
@@ -119,12 +111,8 @@ export default function Home() {
       <div className="d-flex gap-2 mt-3">
         {!isAuth ? (
           <>
-            <Link href="/login">
-              <button className="btn btn-primary">Увійти</button>
-            </Link>
-            <Link href="/register">
-              <button className="btn btn-outline-primary">Зареєструватись</button>
-            </Link>
+            <Link href="/login" className="btn btn-primary">Увійти</Link>
+            <Link href="/register" className="btn btn-outline-primary">Зареєструватись</Link>
           </>
         ) : (
           <>

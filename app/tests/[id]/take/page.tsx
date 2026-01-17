@@ -231,7 +231,7 @@ export default function TakePageClient() {
         <div className="menu-box w-100">
           <div className="alert alert-warning">Тест наразі недоступний за часовим вікном.</div>
           <div className="mb-3">
-            <Link href="/tests"><button className="btn btn-outline-secondary">Назад до списку</button></Link>
+            <Link href="/tests" className="btn btn-outline-secondary">Назад до списку</Link>
           </div>
         </div>
       </div>
@@ -255,7 +255,7 @@ export default function TakePageClient() {
         <div className="menu-box w-100">
           <div className="alert alert-warning">Цей тест вимагає реєстрації для проходження. Будь ласка, <a href="/login">увійдіть</a> або <a href="/register">зареєструйтесь</a>.</div>
           <div className="mb-3">
-            <Link href="/tests"><button className="btn btn-outline-secondary">Назад до списку</button></Link>
+            <Link href="/tests" className="btn btn-outline-secondary">Назад до списку</Link>
           </div>
         </div>
       </div>
@@ -366,7 +366,7 @@ export default function TakePageClient() {
 
         <div className="d-flex gap-2">
           <button className="btn btn-primary" onClick={submitLocal} disabled={submitting}>{submitting ? "Надсилаю..." : "Завершити та надіслати"}</button>
-          <Link href="/tests"><button className="btn btn-outline-secondary">Відмінити</button></Link>
+          <Link href="/tests" className="btn btn-outline-secondary">Відмінити</Link>
         </div>
       </div>
     </div>
