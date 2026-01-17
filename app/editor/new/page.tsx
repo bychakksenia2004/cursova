@@ -155,6 +155,10 @@ export default function NewTestPage() {
     setQuestions((s) => s.map((q) => (q.id === qid ? { ...q, text } : q)));
   }
 
+  function updateQuestionPoints(qid: number, points: number) {
+    setQuestions((s) => s.map((q) => (q.id === qid ? { ...q, points } : q)));
+  }
+
   function updateQuestionType(qid: number, type: string) {
     setQuestions((s) => s.map((q, idx) => {
       if (q.id !== qid) return q;
@@ -248,13 +252,14 @@ export default function NewTestPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [questions, setQuestions] = useState<
-    Array<{ id: number; type: string; text: string; data?: any; imageUrl?: string }>
+    Array<{ id: number; type: string; text: string; data?: any; imageUrl?: string; points?: number }>
   >([]);
   const [initialImageUrls, setInitialImageUrls] = useState<string[]>([]);
   const [invalidField, setInvalidField] = useState<null | { qid: number; field: string; idx?: number; message?: string }>(null);
   const DRAFT_KEY = "test_draft_v1";
   const [lastSaved, setLastSaved] = useState<number | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
+  const [editForbidden, setEditForbidden] = useState<boolean>(false);
   // Ensure restored questions and nested items have necessary ids/defaults
   function normalizeQuestion(q: any, idx: number) {
     const out: any = { ...q };
@@ -283,15 +288,17 @@ export default function NewTestPage() {
     } else if (out.type === "open") {
       out.data.answers = Array.isArray(out.data.answers) ? out.data.answers.map((a: any) => (typeof a === "undefined" ? "" : a)) : [""];
     }
+    // ensure points available per question (default 1)
+    out.points = typeof out.points === "number" ? out.points : (out.data && typeof out.data.points === "number" ? out.data.points : 1);
     return out;
   }
   // Always restore draft on mount so navigating away and back preserves state
 
   useEffect(() => {
     try {
-      document.title = "TestHub | Новий тест";
+      document.title = editId ? "TestHub | Редагування тесту" : "TestHub | Новий тест";
     } catch {}
-  }, []);
+  }, [editId]);
 
   // reusable draft loader
   function loadDraftFromStorage() {
@@ -321,12 +328,16 @@ export default function NewTestPage() {
     // If the URL has ?edit=<id> fetch test for editing
     try {
       const id = searchParams.get("edit");
-      if (id) {
+              if (id) {
         setEditId(id);
         (async function () {
           try {
             const res = await fetch(`/api/tests/${id}`, { credentials: "include" });
-            if (!res.ok) return;
+            if (!res.ok) {
+              // mark that editing this test is forbidden for current user
+              if (res.status === 403) setEditForbidden(true);
+              return;
+            }
             const data = await res.json();
             if (data?.ok && data.test) {
               const t = data.test;
@@ -358,7 +369,7 @@ export default function NewTestPage() {
                 else if (ftype === "sequence") dataObj.options = q.options || [];
                 else if (ftype === "matching") dataObj.pairs = q.pairs || [];
                 else if (ftype === "open") dataObj.answers = q.answers || [];
-                return { id: q.id || Date.now(), type: ftype, text: q.text || "", data: dataObj, imageUrl: q.imageUrl || (q.image && (q.image.secure_url || q.image.url)) || undefined };
+                return { id: q.id || Date.now(), type: ftype, text: q.text || "", data: dataObj, points: typeof q.points === "number" ? q.points : 1, imageUrl: q.imageUrl || (q.image && (q.image.secure_url || q.image.url)) || undefined };
               }) : [];
               setQuestions(mapped);
               try {
@@ -594,13 +605,18 @@ export default function NewTestPage() {
     return true;
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     if (!validateQuestions()) return;
     // title validation now handled in validateQuestions()
     setLoading(true);
     try {
+      if (editId && editForbidden) {
+        setError("Ви не маєте прав редагувати цей тест.");
+        setLoading(false);
+        return;
+      }
       // If editing, delete any images that existed in the original test but were removed now
       if (editId && Array.isArray(initialImageUrls) && initialImageUrls.length > 0) {
         const currentUrls = questions.map((q) => q.imageUrl).filter(Boolean) as string[];
@@ -630,6 +646,26 @@ export default function NewTestPage() {
         }
       }
       let res: Response;
+      // Prepare questions in the frontend shape the API expects.
+      // The server will map frontend types (e.g. 'single') to DB discriminators (e.g. 'single_choice').
+      const frontQuestions = questions.map((q: any) => {
+        const out: any = { id: q.id, type: q.type, text: q.text || "", points: typeof q.points === "number" ? q.points : 1 };
+        if (q.type === "single" || q.type === "multi" || q.type === "sequence") {
+          out.data = out.data || {};
+          out.data.options = Array.isArray(q.data?.options)
+            ? q.data.options.map((o: any) => ({ id: o.id, text: o.text, correct: !!o.correct, order: o.order }))
+            : [];
+        } else if (q.type === "matching") {
+          out.data = out.data || {};
+          out.data.pairs = Array.isArray(q.data?.pairs) ? q.data.pairs.map((p: any) => ({ id: p.id, left: p.left, right: p.right })) : [];
+        } else if (q.type === "open") {
+          out.data = out.data || {};
+          out.data.answers = Array.isArray(q.data?.answers) ? q.data.answers.map((a: any) => String(a || "")) : [];
+        }
+        if (q.imageUrl) out.imageUrl = q.imageUrl;
+        return out;
+      });
+
       const payload = {
         title,
         description,
@@ -641,7 +677,7 @@ export default function NewTestPage() {
         openFrom: openFrom || undefined,
         openTo: openTo || undefined,
         ownResultView,
-        questions,
+        questions: frontQuestions,
       };
       if (editId) {
         res = await fetch(`/api/tests/${editId}`, {
@@ -669,10 +705,24 @@ export default function NewTestPage() {
       setLoading(false);
     }
   }
+  if (editForbidden) {
+    return (
+      <div className="container d-flex flex-column align-items-center min-vh-100">
+        <h2 className="mb-4 text-center">Редагування заборонено</h2>
+        <div className="menu-box p-4">
+          <div className="alert alert-danger">Ви не маєте прав редагувати цей тест.</div>
+          <div className="d-flex gap-2">
+            <Link href="/editor"><button className="btn btn-outline-secondary">Назад</button></Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container d-flex flex-column align-items-center min-vh-100">
-      <h2 className="mb-4 text-center">Новий тест</h2>
+      <h2 className="mb-4 text-center">{editId ? "Редагування тесту" : "Новий тест"}</h2>
+      
       <form className="menu-box p-4" onSubmit={onSubmit}>
         <div className="mb-3">
           <label className="form-label">Назва</label>
@@ -752,7 +802,11 @@ export default function NewTestPage() {
               id="storeNo"
               autoComplete="off"
               checked={storeResponses === false}
-              onChange={() => setStoreResponses(false)}
+              onChange={() => {
+                setStoreResponses(false);
+                // prevent 'nothing' view when responses are not stored
+                if (ownResultView === "nothing") setOwnResultView("full");
+              }}
             />
             <label className="btn btn-outline-primary" htmlFor="storeNo">
               Ні
@@ -800,14 +854,15 @@ export default function NewTestPage() {
               id="ownNothing"
               autoComplete="off"
               checked={ownResultView === "nothing"}
-              onChange={() => setOwnResultView("nothing")}
+              disabled={storeResponses === false}
+              onChange={() => { if (storeResponses) setOwnResultView("nothing"); }}
             />
-            <label className="btn btn-outline-primary" htmlFor="ownNothing">
+            {storeResponses ? <label className="btn btn-outline-primary" htmlFor="ownNothing">
               Нічого не показувати
-            </label>
+            </label> : null}
           </div>
           <div className="form-text mt-1">
-            Ця опція визначає, що бачить сам користувач після завершення тесту незалежно від того, чи зберігаються відповіді.
+            Ця опція визначає, що бачить сам користувач після завершення тесту.
           </div>
         </div>
 
@@ -877,6 +932,16 @@ export default function NewTestPage() {
                     <option value="open">Відкрита відповідь</option>
                     <option value="matching">Відповідності</option>
                   </select>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    className="form-control form-control-sm"
+                    style={{ width: 90 }}
+                    value={typeof q.points === "number" ? q.points : 1}
+                    onChange={(e) => updateQuestionPoints(q.id, Number(e.target.value || 0))}
+                    title="Бали за питання"
+                  />
                   <span className="badge bg-secondary text-capitalize">{q.type}</span>
                 </div>
               </div>
@@ -1056,7 +1121,7 @@ export default function NewTestPage() {
             Очистити всі поля
           </button>
           <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? "Зберігаю..." : "Створити тест"}
+            {loading ? (editId ? "Оновлюю..." : "Зберігаю...") : (editId ? "Оновити тест" : "Створити тест")}
           </button>
           <Link href="/editor" className="btn btn-outline-secondary">
             Назад

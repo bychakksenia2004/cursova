@@ -863,6 +863,12 @@ function NewTestPage() {
                     text
                 } : q));
     }
+    function updateQuestionPoints(qid, points) {
+        setQuestions((s)=>s.map((q)=>q.id === qid ? {
+                    ...q,
+                    points
+                } : q));
+    }
     function updateQuestionType(qid, type) {
         setQuestions((s)=>s.map((q, idx)=>{
                 if (q.id !== qid) return q;
@@ -1029,6 +1035,7 @@ function NewTestPage() {
     const DRAFT_KEY = "test_draft_v1";
     const [lastSaved, setLastSaved] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [editId, setEditId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [editForbidden, setEditForbidden] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     // Ensure restored questions and nested items have necessary ids/defaults
     function normalizeQuestion(q, idx) {
         const out = {
@@ -1061,16 +1068,20 @@ function NewTestPage() {
                 ""
             ];
         }
+        // ensure points available per question (default 1)
+        out.points = typeof out.points === "number" ? out.points : out.data && typeof out.data.points === "number" ? out.data.points : 1;
         return out;
     }
     // Always restore draft on mount so navigating away and back preserves state
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "NewTestPage.useEffect": ()=>{
             try {
-                document.title = "TestHub | Новий тест";
+                document.title = editId ? "TestHub | Редагування тесту" : "TestHub | Новий тест";
             } catch  {}
         }
-    }["NewTestPage.useEffect"], []);
+    }["NewTestPage.useEffect"], [
+        editId
+    ]);
     // reusable draft loader
     function loadDraftFromStorage() {
         try {
@@ -1110,7 +1121,11 @@ function NewTestPage() {
                                 const res = await fetch(`/api/tests/${id}`, {
                                     credentials: "include"
                                 });
-                                if (!res.ok) return;
+                                if (!res.ok) {
+                                    // mark that editing this test is forbidden for current user
+                                    if (res.status === 403) setEditForbidden(true);
+                                    return;
+                                }
                                 const data = await res.json();
                                 if (data?.ok && data.test) {
                                     const t = data.test;
@@ -1156,6 +1171,7 @@ function NewTestPage() {
                                                 type: ftype,
                                                 text: q.text || "",
                                                 data: dataObj,
+                                                points: typeof q.points === "number" ? q.points : 1,
                                                 imageUrl: q.imageUrl || q.image && (q.image.secure_url || q.image.url) || undefined
                                             };
                                         }
@@ -1467,6 +1483,11 @@ function NewTestPage() {
         // title validation now handled in validateQuestions()
         setLoading(true);
         try {
+            if (editId && editForbidden) {
+                setError("Ви не маєте прав редагувати цей тест.");
+                setLoading(false);
+                return;
+            }
             // If editing, delete any images that existed in the original test but were removed now
             if (editId && Array.isArray(initialImageUrls) && initialImageUrls.length > 0) {
                 const currentUrls = questions.map((q)=>q.imageUrl).filter(Boolean);
@@ -1500,6 +1521,37 @@ function NewTestPage() {
                 }
             }
             let res;
+            // Prepare questions in the frontend shape the API expects.
+            // The server will map frontend types (e.g. 'single') to DB discriminators (e.g. 'single_choice').
+            const frontQuestions = questions.map((q)=>{
+                const out = {
+                    id: q.id,
+                    type: q.type,
+                    text: q.text || "",
+                    points: typeof q.points === "number" ? q.points : 1
+                };
+                if (q.type === "single" || q.type === "multi" || q.type === "sequence") {
+                    out.data = out.data || {};
+                    out.data.options = Array.isArray(q.data?.options) ? q.data.options.map((o)=>({
+                            id: o.id,
+                            text: o.text,
+                            correct: !!o.correct,
+                            order: o.order
+                        })) : [];
+                } else if (q.type === "matching") {
+                    out.data = out.data || {};
+                    out.data.pairs = Array.isArray(q.data?.pairs) ? q.data.pairs.map((p)=>({
+                            id: p.id,
+                            left: p.left,
+                            right: p.right
+                        })) : [];
+                } else if (q.type === "open") {
+                    out.data = out.data || {};
+                    out.data.answers = Array.isArray(q.data?.answers) ? q.data.answers.map((a)=>String(a || "")) : [];
+                }
+                if (q.imageUrl) out.imageUrl = q.imageUrl;
+                return out;
+            });
             const payload = {
                 title,
                 description,
@@ -1511,7 +1563,7 @@ function NewTestPage() {
                 openFrom: openFrom || undefined,
                 openTo: openTo || undefined,
                 ownResultView,
-                questions
+                questions: frontQuestions
             };
             if (editId) {
                 res = await fetch(`/api/tests/${editId}`, {
@@ -1543,15 +1595,73 @@ function NewTestPage() {
             setLoading(false);
         }
     }
+    if (editForbidden) {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "container d-flex flex-column align-items-center min-vh-100",
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                    className: "mb-4 text-center",
+                    children: "Редагування заборонено"
+                }, void 0, false, {
+                    fileName: "[project]/app/editor/new/page.tsx",
+                    lineNumber: 711,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "menu-box p-4",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "alert alert-danger",
+                            children: "Ви не маєте прав редагувати цей тест."
+                        }, void 0, false, {
+                            fileName: "[project]/app/editor/new/page.tsx",
+                            lineNumber: 713,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "d-flex gap-2",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                href: "/editor",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    className: "btn btn-outline-secondary",
+                                    children: "Назад"
+                                }, void 0, false, {
+                                    fileName: "[project]/app/editor/new/page.tsx",
+                                    lineNumber: 715,
+                                    columnNumber: 34
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "[project]/app/editor/new/page.tsx",
+                                lineNumber: 715,
+                                columnNumber: 13
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/app/editor/new/page.tsx",
+                            lineNumber: 714,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/app/editor/new/page.tsx",
+                    lineNumber: 712,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/app/editor/new/page.tsx",
+            lineNumber: 710,
+            columnNumber: 7
+        }, this);
+    }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "container d-flex flex-column align-items-center min-vh-100",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                 className: "mb-4 text-center",
-                children: "Новий тест"
+                children: editId ? "Редагування тесту" : "Новий тест"
             }, void 0, false, {
                 fileName: "[project]/app/editor/new/page.tsx",
-                lineNumber: 675,
+                lineNumber: 724,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -1566,7 +1676,7 @@ function NewTestPage() {
                                 children: "Назва"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 678,
+                                lineNumber: 728,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1576,7 +1686,7 @@ function NewTestPage() {
                                 onChange: (e)=>setTitle(e.target.value)
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 679,
+                                lineNumber: 729,
                                 columnNumber: 11
                             }, this),
                             invalidField && invalidField.field === "title" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1584,13 +1694,13 @@ function NewTestPage() {
                                 children: invalidField.message
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 686,
+                                lineNumber: 736,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 677,
+                        lineNumber: 727,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1601,7 +1711,7 @@ function NewTestPage() {
                                 children: "Опис"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 691,
+                                lineNumber: 741,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -1611,13 +1721,13 @@ function NewTestPage() {
                                 onChange: (e)=>setDescription(e.target.value)
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 692,
+                                lineNumber: 742,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 690,
+                        lineNumber: 740,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1628,7 +1738,7 @@ function NewTestPage() {
                                 children: "Видимість"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 701,
+                                lineNumber: 751,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1645,7 +1755,7 @@ function NewTestPage() {
                                         onChange: ()=>setVisibility("public")
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 703,
+                                        lineNumber: 753,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1654,7 +1764,7 @@ function NewTestPage() {
                                         children: "Публічний"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 712,
+                                        lineNumber: 762,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1667,7 +1777,7 @@ function NewTestPage() {
                                         onChange: ()=>setVisibility("private")
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 716,
+                                        lineNumber: 766,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1676,19 +1786,19 @@ function NewTestPage() {
                                         children: "Приватний"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 725,
+                                        lineNumber: 775,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 702,
+                                lineNumber: 752,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 700,
+                        lineNumber: 750,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1699,7 +1809,7 @@ function NewTestPage() {
                                 children: "Зберігати відповіді та результати користувачів"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 733,
+                                lineNumber: 783,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1716,7 +1826,7 @@ function NewTestPage() {
                                         onChange: ()=>setStoreResponses(true)
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 735,
+                                        lineNumber: 785,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1725,7 +1835,7 @@ function NewTestPage() {
                                         children: "Так"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 744,
+                                        lineNumber: 794,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1735,10 +1845,14 @@ function NewTestPage() {
                                         id: "storeNo",
                                         autoComplete: "off",
                                         checked: storeResponses === false,
-                                        onChange: ()=>setStoreResponses(false)
+                                        onChange: ()=>{
+                                            setStoreResponses(false);
+                                            // prevent 'nothing' view when responses are not stored
+                                            if (ownResultView === "nothing") setOwnResultView("full");
+                                        }
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 748,
+                                        lineNumber: 798,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1747,13 +1861,13 @@ function NewTestPage() {
                                         children: "Ні"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 757,
+                                        lineNumber: 811,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 734,
+                                lineNumber: 784,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1761,13 +1875,13 @@ function NewTestPage() {
                                 children: "Якщо так — зберігатимуться індивідуальні відповіді та результати (ви зможете бачити список користувачів, які пройшли тест)."
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 761,
+                                lineNumber: 815,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 732,
+                        lineNumber: 782,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1778,7 +1892,7 @@ function NewTestPage() {
                                 children: "Що бачить користувач після проходження"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 768,
+                                lineNumber: 822,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1795,7 +1909,7 @@ function NewTestPage() {
                                         onChange: ()=>setOwnResultView("full")
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 770,
+                                        lineNumber: 824,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1804,7 +1918,7 @@ function NewTestPage() {
                                         children: "Повні результати (питання + відповіді + бали)"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 779,
+                                        lineNumber: 833,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1817,7 +1931,7 @@ function NewTestPage() {
                                         onChange: ()=>setOwnResultView("score_only")
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 783,
+                                        lineNumber: 837,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1826,7 +1940,7 @@ function NewTestPage() {
                                         children: "Тільки бали"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 792,
+                                        lineNumber: 846,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1836,39 +1950,42 @@ function NewTestPage() {
                                         id: "ownNothing",
                                         autoComplete: "off",
                                         checked: ownResultView === "nothing",
-                                        onChange: ()=>setOwnResultView("nothing")
+                                        disabled: storeResponses === false,
+                                        onChange: ()=>{
+                                            if (storeResponses) setOwnResultView("nothing");
+                                        }
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 796,
+                                        lineNumber: 850,
                                         columnNumber: 13
                                     }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                    storeResponses ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                         className: "btn btn-outline-primary",
                                         htmlFor: "ownNothing",
                                         children: "Нічого не показувати"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 805,
-                                        columnNumber: 13
-                                    }, this)
+                                        lineNumber: 860,
+                                        columnNumber: 31
+                                    }, this) : null
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 769,
+                                lineNumber: 823,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "form-text mt-1",
-                                children: "Ця опція визначає, що бачить сам користувач після завершення тесту незалежно від того, чи зберігаються відповіді."
+                                children: "Ця опція визначає, що бачить сам користувач після завершення тесту."
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 809,
+                                lineNumber: 864,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 767,
+                        lineNumber: 821,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1879,7 +1996,7 @@ function NewTestPage() {
                                 children: "Налаштування часу"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 815,
+                                lineNumber: 870,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1894,7 +2011,7 @@ function NewTestPage() {
                                         onChange: (e)=>setTimed(e.target.checked)
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 817,
+                                        lineNumber: 872,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1903,13 +2020,13 @@ function NewTestPage() {
                                         children: "Обмежений час проходження"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 818,
+                                        lineNumber: 873,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 816,
+                                lineNumber: 871,
                                 columnNumber: 11
                             }, this),
                             timed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1928,12 +2045,12 @@ function NewTestPage() {
                                             placeholder: "Тривалість (хвилин)"
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 823,
+                                            lineNumber: 878,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 822,
+                                        lineNumber: 877,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1941,18 +2058,18 @@ function NewTestPage() {
                                         children: "Вкажіть тривалість тесту в хвилинах."
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 832,
+                                        lineNumber: 887,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 821,
+                                lineNumber: 876,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("hr", {}, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 836,
+                                lineNumber: 891,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1967,7 +2084,7 @@ function NewTestPage() {
                                         onChange: (e)=>setDateWindowEnabled(e.target.checked)
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 839,
+                                        lineNumber: 894,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1976,13 +2093,13 @@ function NewTestPage() {
                                         children: "Обмежити доступ датами"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 840,
+                                        lineNumber: 895,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 838,
+                                lineNumber: 893,
                                 columnNumber: 11
                             }, this),
                             dateWindowEnabled && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1999,7 +2116,7 @@ function NewTestPage() {
                                                 children: "Від"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 845,
+                                                lineNumber: 900,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2009,13 +2126,13 @@ function NewTestPage() {
                                                 onChange: (e)=>setOpenFrom(e.target.value)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 846,
+                                                lineNumber: 901,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 844,
+                                        lineNumber: 899,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2029,7 +2146,7 @@ function NewTestPage() {
                                                 children: "До"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 849,
+                                                lineNumber: 904,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2039,13 +2156,13 @@ function NewTestPage() {
                                                 onChange: (e)=>setOpenTo(e.target.value)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 850,
+                                                lineNumber: 905,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 848,
+                                        lineNumber: 903,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2053,19 +2170,19 @@ function NewTestPage() {
                                         children: "Коли увімкнено — тест буде доступний лише в проміжку часу."
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 852,
+                                        lineNumber: 907,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 843,
+                                lineNumber: 898,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 814,
+                        lineNumber: 869,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2076,7 +2193,7 @@ function NewTestPage() {
                                 children: "Питання"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 858,
+                                lineNumber: 913,
                                 columnNumber: 11
                             }, this),
                             questions.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2084,7 +2201,7 @@ function NewTestPage() {
                                 children: "Поки немає питань. Додайте перше питання."
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 861,
+                                lineNumber: 916,
                                 columnNumber: 13
                             }, this),
                             questions.map((q)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2098,7 +2215,7 @@ function NewTestPage() {
                                                     children: "Питання"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                    lineNumber: 866,
+                                                    lineNumber: 921,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2117,7 +2234,7 @@ function NewTestPage() {
                                                                     children: "Одиночний вибір"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 874,
+                                                                    lineNumber: 929,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2125,7 +2242,7 @@ function NewTestPage() {
                                                                     children: "Множинний вибір"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 875,
+                                                                    lineNumber: 930,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2133,7 +2250,7 @@ function NewTestPage() {
                                                                     children: "Порядок"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 876,
+                                                                    lineNumber: 931,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2141,7 +2258,7 @@ function NewTestPage() {
                                                                     children: "Відкрита відповідь"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 877,
+                                                                    lineNumber: 932,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2149,13 +2266,29 @@ function NewTestPage() {
                                                                     children: "Відповідності"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                    lineNumber: 878,
+                                                                    lineNumber: 933,
                                                                     columnNumber: 21
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/app/editor/new/page.tsx",
-                                                            lineNumber: 868,
+                                                            lineNumber: 923,
+                                                            columnNumber: 19
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                            type: "number",
+                                                            min: 0,
+                                                            step: 0.5,
+                                                            className: "form-control form-control-sm",
+                                                            style: {
+                                                                width: 90
+                                                            },
+                                                            value: typeof q.points === "number" ? q.points : 1,
+                                                            onChange: (e)=>updateQuestionPoints(q.id, Number(e.target.value || 0)),
+                                                            title: "Бали за питання"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/editor/new/page.tsx",
+                                                            lineNumber: 935,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2163,19 +2296,19 @@ function NewTestPage() {
                                                             children: q.type
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/editor/new/page.tsx",
-                                                            lineNumber: 880,
+                                                            lineNumber: 945,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                    lineNumber: 867,
+                                                    lineNumber: 922,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 865,
+                                            lineNumber: 920,
                                             columnNumber: 15
                                         }, this),
                                         q.type !== "open" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -2189,7 +2322,7 @@ function NewTestPage() {
                                                     onChange: (e)=>updateQuestion(q.id, e.target.value)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                    lineNumber: 885,
+                                                    lineNumber: 950,
                                                     columnNumber: 19
                                                 }, this),
                                                 invalidField && invalidField.qid === q.id && invalidField.field === "text" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2197,7 +2330,7 @@ function NewTestPage() {
                                                     children: invalidField.message
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                    lineNumber: 894,
+                                                    lineNumber: 959,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2209,7 +2342,7 @@ function NewTestPage() {
                                                                 children: "Зображення (опціонально)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                                lineNumber: 898,
+                                                                lineNumber: 963,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2247,7 +2380,7 @@ function NewTestPage() {
                                                                         }
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/app/editor/new/page.tsx",
-                                                                        lineNumber: 900,
+                                                                        lineNumber: 965,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     q.imageUrl ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2264,7 +2397,7 @@ function NewTestPage() {
                                                                                 }
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                                                lineNumber: 929,
+                                                                                lineNumber: 994,
                                                                                 columnNumber: 29
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2300,35 +2433,35 @@ function NewTestPage() {
                                                                                     children: "Видалити"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                                                    lineNumber: 931,
+                                                                                    lineNumber: 996,
                                                                                     columnNumber: 31
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                                                lineNumber: 930,
+                                                                                lineNumber: 995,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/app/editor/new/page.tsx",
-                                                                        lineNumber: 928,
+                                                                        lineNumber: 993,
                                                                         columnNumber: 27
                                                                     }, this) : null
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                                lineNumber: 899,
+                                                                lineNumber: 964,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/app/editor/new/page.tsx",
-                                                        lineNumber: 897,
+                                                        lineNumber: 962,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/editor/new/page.tsx",
-                                                    lineNumber: 896,
+                                                    lineNumber: 961,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
@@ -2344,7 +2477,7 @@ function NewTestPage() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 965,
+                                            lineNumber: 1030,
                                             columnNumber: 17
                                         }, this),
                                         q.type === "single" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcomponents$2f$SingleChoice$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -2358,7 +2491,7 @@ function NewTestPage() {
                                             toggleOptionCorrect: toggleOptionCorrect
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 978,
+                                            lineNumber: 1043,
                                             columnNumber: 17
                                         }, this),
                                         q.type === "multi" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcomponents$2f$MultiChoice$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -2372,7 +2505,7 @@ function NewTestPage() {
                                             toggleOptionCorrect: toggleOptionCorrect
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 991,
+                                            lineNumber: 1056,
                                             columnNumber: 17
                                         }, this),
                                         q.type === "sequence" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcomponents$2f$SequenceQuestion$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -2385,7 +2518,7 @@ function NewTestPage() {
                                             removeSequenceItem: removeSequenceItem
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 1004,
+                                            lineNumber: 1069,
                                             columnNumber: 17
                                         }, this),
                                         q.type === "matching" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$components$2f$testcomponents$2f$MatchingQuestion$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -2397,7 +2530,7 @@ function NewTestPage() {
                                             removePairFromQuestion: removePairFromQuestion
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 1016,
+                                            lineNumber: 1081,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2409,18 +2542,18 @@ function NewTestPage() {
                                                 children: "Видалити питання"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 1026,
+                                                lineNumber: 1091,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/app/editor/new/page.tsx",
-                                            lineNumber: 1025,
+                                            lineNumber: 1090,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, q.id, true, {
                                     fileName: "[project]/app/editor/new/page.tsx",
-                                    lineNumber: 864,
+                                    lineNumber: 919,
                                     columnNumber: 13
                                 }, this)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2436,7 +2569,7 @@ function NewTestPage() {
                                                 children: "Одиночний вибір"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 1038,
+                                                lineNumber: 1103,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2444,7 +2577,7 @@ function NewTestPage() {
                                                 children: "Множинний вибір"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 1039,
+                                                lineNumber: 1104,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2452,7 +2585,7 @@ function NewTestPage() {
                                                 children: "Порядок (послідовність)"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 1040,
+                                                lineNumber: 1105,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2460,7 +2593,7 @@ function NewTestPage() {
                                                 children: "Відкрита відповідь"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 1041,
+                                                lineNumber: 1106,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2468,13 +2601,13 @@ function NewTestPage() {
                                                 children: "Відповідності"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/editor/new/page.tsx",
-                                                lineNumber: 1042,
+                                                lineNumber: 1107,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 1033,
+                                        lineNumber: 1098,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2484,19 +2617,19 @@ function NewTestPage() {
                                         children: "Додати питання"
                                     }, void 0, false, {
                                         fileName: "[project]/app/editor/new/page.tsx",
-                                        lineNumber: 1044,
+                                        lineNumber: 1109,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 1032,
+                                lineNumber: 1097,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 857,
+                        lineNumber: 912,
                         columnNumber: 9
                     }, this),
                     error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2504,7 +2637,7 @@ function NewTestPage() {
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 1050,
+                        lineNumber: 1115,
                         columnNumber: 19
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2517,17 +2650,17 @@ function NewTestPage() {
                                 children: "Очистити всі поля"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 1055,
+                                lineNumber: 1120,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                 className: "btn btn-primary",
                                 type: "submit",
                                 disabled: loading,
-                                children: loading ? "Зберігаю..." : "Створити тест"
+                                children: loading ? editId ? "Оновлюю..." : "Зберігаю..." : editId ? "Оновити тест" : "Створити тест"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 1058,
+                                lineNumber: 1123,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -2536,29 +2669,29 @@ function NewTestPage() {
                                 children: "Назад"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/new/page.tsx",
-                                lineNumber: 1061,
+                                lineNumber: 1126,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/new/page.tsx",
-                        lineNumber: 1054,
+                        lineNumber: 1119,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/editor/new/page.tsx",
-                lineNumber: 676,
+                lineNumber: 726,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/editor/new/page.tsx",
-        lineNumber: 674,
+        lineNumber: 723,
         columnNumber: 5
     }, this);
 }
-_s(NewTestPage, "hIBsgiXLGDbZrohG5vmHcVbLILg=", false, function() {
+_s(NewTestPage, "GloupDw9DMDuHQ7KwpuvUoeBi9s=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSearchParams"],

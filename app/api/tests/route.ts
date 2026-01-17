@@ -35,6 +35,8 @@ export async function POST(req: Request) {
     // Transform questions to match schema discriminators
     const transformed = questions.map((q: any) => {
       const common: any = { id: q.id, type: mapType(q.type), text: q.text };
+      // optional points per question (default handled by schema)
+      common.points = typeof q.points === "number" ? q.points : (q.data && typeof q.data.points === "number" ? q.data.points : undefined);
       // preserve optional imageUrl if provided by client
       common.imageUrl = q.imageUrl || (q.image && (q.image.secure_url || q.image.url)) || undefined;
       if (q.type === "single" || q.type === "multi") {
@@ -79,9 +81,18 @@ export async function GET(req: Request) {
     const user = await getUserFromCookieServer();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Return list of tests authored by user
-    const tests = await Test.find({ authorId: user._id }).select("title description").lean();
-    return NextResponse.json({ ok: true, tests }, { status: 200 });
+    // pagination params
+    const url = new URL(req.url);
+    const page = Math.max(1, Number(url.searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") || "10")));
+    const skip = (page - 1) * limit;
+
+    // Return paginated list of tests authored by user (include storeResponses flag)
+    const baseQuery = { authorId: user._id } as any;
+    const total = await Test.countDocuments(baseQuery);
+    const tests = await Test.find(baseQuery).select("title description storeResponses").sort({ _id: -1 }).skip(skip).limit(limit).lean();
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    return NextResponse.json({ ok: true, tests, total, page, totalPages }, { status: 200 });
   } catch (err: any) {
     console.error("/api/tests GET error:", err);
     return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });

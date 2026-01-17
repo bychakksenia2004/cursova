@@ -52,8 +52,6 @@ export default function TopRightUser() {
   if (!user) return null;
 
   return (
-    <Link href="/profile">
       <button className="top-right-user btn btn-secondary" title={user.username}>Привіт, {user.username}</button>
-    </Link>
   );
 }

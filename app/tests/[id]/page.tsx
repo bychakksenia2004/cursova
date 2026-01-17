@@ -19,10 +19,12 @@ export default async function Page(ctx: any) {
     const openTo = test.openTo ? new Date(test.openTo) : null;
     const inWindow = !windowEnabled || ((openFrom ? now >= openFrom : true) && (openTo ? now <= openTo : true));
 
+    const authorDisplayName = (test.authorId && (test.authorId as any).username) ? (test.authorId as any).username : "(невідомо)";
+
     return (
       <div className="container d-flex flex-column align-items-center min-vh-100">
         <h2 className="mb-3">{test.title}</h2>
-        <div className="text-muted mb-3">Автор: {test.authorId?.username || "(невідомо)"}</div>
+        <div className="text-muted mb-3">Автор: {authorDisplayName}</div>
         <div className="menu-box w-100">
          {test.description ? <p>{test.description}</p> : null}
           <div className="mb-3">

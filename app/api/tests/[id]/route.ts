@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDB } from "../../../../lib/mongodb";
 import Test from "../../../../lib/models/Test";
+import Attempt from "../../../../lib/models/Attempt";
 import { getUserFromCookieServer } from "../../../../lib/auth";
 
 export async function GET(req: Request, ctx: any) {
@@ -66,6 +67,8 @@ export async function PUT(req: Request, ctx: any) {
 
     const transformed = (Array.isArray(questions) ? questions : []).map((q: any) => {
       const common: any = { id: q.id, type: mapType(q.type), text: q.text };
+      // optional points per question (preserve if provided)
+      common.points = typeof q.points === "number" ? q.points : (q.data && typeof q.data.points === "number" ? q.data.points : undefined);
       // preserve optional imageUrl if provided from client
       common.imageUrl = q.imageUrl || (q.image && (q.image.secure_url || q.image.url)) || undefined;
       if (q.type === "single" || q.type === "multi") common.options = q.data?.options || q.options || [];
@@ -95,6 +98,13 @@ export async function DELETE(req: Request, ctx: any) {
     const test = await Test.findById(id);
     if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
     if (String(test.authorId) !== String(user._id)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    // delete associated attempts first
+    try {
+      await Attempt.deleteMany({ testId: id });
+    } catch (err) {
+      console.warn("Failed to delete related attempts for test", id, err);
+    }
 
     await Test.findByIdAndDelete(id);
     return NextResponse.json({ ok: true }, { status: 200 });

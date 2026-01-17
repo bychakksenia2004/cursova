@@ -16,6 +16,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 function Editor() {
     // Note: draft auto-save/restore remains in the editor/new page via localStorage.
     const [tests, setTests] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [query, setQuery] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("");
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
     const [deletingId, setDeletingId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [copiedId, setCopiedId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
@@ -31,7 +32,8 @@ function Editor() {
                 if (mounted && data?.ok && Array.isArray(data.tests)) setTests(data.tests.map((t)=>({
                         _id: t._id || t.id || t._id,
                         title: t.title,
-                        description: t.description
+                        description: t.description,
+                        storeResponses: !!t.storeResponses
                     })));
             } catch (err) {
                 console.warn("Failed to load tests:", err);
@@ -57,7 +59,7 @@ function Editor() {
                 children: "Редактор тестів"
             }, void 0, false, {
                 fileName: "[project]/app/editor/page.tsx",
-                lineNumber: 38,
+                lineNumber: 39,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -65,17 +67,34 @@ function Editor() {
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                         href: "/editor/new",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
                             className: "btn btn-primary w-100",
                             children: "Додати новий тест"
                         }, void 0, false, {
                             fileName: "[project]/app/editor/page.tsx",
-                            lineNumber: 41,
+                            lineNumber: 42,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/app/editor/page.tsx",
-                        lineNumber: 40,
+                        lineNumber: 41,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "mt-2",
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                            className: "form-control",
+                            placeholder: "Пошук за назвою тесту...",
+                            value: query,
+                            onChange: (e)=>setQuery(e.target.value)
+                        }, void 0, false, {
+                            fileName: "[project]/app/editor/page.tsx",
+                            lineNumber: 45,
+                            columnNumber: 11
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/app/editor/page.tsx",
+                        lineNumber: 44,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -86,7 +105,7 @@ function Editor() {
                                 children: "Мої тести"
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/page.tsx",
-                                lineNumber: 44,
+                                lineNumber: 48,
                                 columnNumber: 11
                             }, this),
                             loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -94,18 +113,18 @@ function Editor() {
                                 children: "Завантаження..."
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/page.tsx",
-                                lineNumber: 46,
+                                lineNumber: 50,
                                 columnNumber: 13
                             }, this) : tests.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "text-muted",
                                 children: "У вас ще немає створених тестів."
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/page.tsx",
-                                lineNumber: 48,
+                                lineNumber: 52,
                                 columnNumber: 13
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "list-group transparent-list",
-                                children: tests.map((t)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                children: tests.filter((t)=>t.title.toLowerCase().includes(query.toLowerCase())).map((t)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "list-group-item d-flex justify-content-between align-items-start",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -115,7 +134,7 @@ function Editor() {
                                                         children: t.title
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/editor/page.tsx",
-                                                        lineNumber: 54,
+                                                        lineNumber: 58,
                                                         columnNumber: 21
                                                     }, this),
                                                     t.description ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -123,32 +142,47 @@ function Editor() {
                                                         children: t.description
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/editor/page.tsx",
-                                                        lineNumber: 55,
+                                                        lineNumber: 59,
                                                         columnNumber: 38
                                                     }, this) : null
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/editor/page.tsx",
-                                                lineNumber: 53,
+                                                lineNumber: 57,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                                                         href: `/editor/new?edit=${t._id}`,
-                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
                                                             className: "btn btn-sm btn-outline-primary",
                                                             children: "Редагувати"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/editor/page.tsx",
-                                                            lineNumber: 59,
+                                                            lineNumber: 63,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/editor/page.tsx",
-                                                        lineNumber: 58,
+                                                        lineNumber: 62,
                                                         columnNumber: 21
                                                     }, this),
+                                                    t.storeResponses ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+                                                        href: `/editor/attempts/${t._id}`,
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                                                            className: "btn btn-sm btn-outline-secondary ms-2",
+                                                            children: "Проходження"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/app/editor/page.tsx",
+                                                            lineNumber: 67,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/editor/page.tsx",
+                                                        lineNumber: 66,
+                                                        columnNumber: 23
+                                                    }, this) : null,
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                         className: "btn btn-sm btn-outline-danger ms-2",
                                                         onClick: async ()=>{
@@ -176,22 +210,22 @@ function Editor() {
                                                         children: deletingId === t._id ? "Видаляю..." : "Видалити"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/editor/page.tsx",
-                                                        lineNumber: 61,
+                                                        lineNumber: 70,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                         className: "btn btn-sm btn-outline-success ms-2",
                                                         onClick: async ()=>{
                                                             try {
-                                                                const origin = ("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : "";
-                                                                const url = `${origin}/tests/${t._id}`;
+                                                                // copy only the test id (code)
+                                                                const code = t._id;
                                                                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                                                                    await navigator.clipboard.writeText(url);
+                                                                    await navigator.clipboard.writeText(code);
                                                                 } else {
-                                                                    // fallback
+                                                                    // fallback for older browsers
                                                                     const tmp = document.createElement("input");
                                                                     document.body.appendChild(tmp);
-                                                                    tmp.value = url;
+                                                                    tmp.value = code;
                                                                     tmp.select();
                                                                     document.execCommand("copy");
                                                                     document.body.removeChild(tmp);
@@ -199,49 +233,49 @@ function Editor() {
                                                                 setCopiedId(t._id);
                                                                 setTimeout(()=>setCopiedId(null), 2500);
                                                             } catch (err) {
-                                                                console.warn("Failed to copy link:", err);
-                                                                alert("Не вдалося скопіювати посилання");
+                                                                console.warn("Failed to copy id:", err);
+                                                                alert("Не вдалося скопіювати код тесту");
                                                             }
                                                         },
                                                         children: copiedId === t._id ? "Скопійовано!" : "Поділитись"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/editor/page.tsx",
-                                                        lineNumber: 85,
+                                                        lineNumber: 94,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/editor/page.tsx",
-                                                lineNumber: 57,
+                                                lineNumber: 61,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, t._id, true, {
                                         fileName: "[project]/app/editor/page.tsx",
-                                        lineNumber: 52,
+                                        lineNumber: 56,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/app/editor/page.tsx",
-                                lineNumber: 50,
+                                lineNumber: 54,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/editor/page.tsx",
-                        lineNumber: 43,
+                        lineNumber: 47,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/editor/page.tsx",
-                lineNumber: 39,
+                lineNumber: 40,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/editor/page.tsx",
-        lineNumber: 37,
+        lineNumber: 38,
         columnNumber: 5
     }, this);
 }

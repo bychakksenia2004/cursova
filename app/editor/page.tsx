@@ -4,19 +4,25 @@ import Link from "next/link";
 
 export default function Editor() {
   // Note: draft auto-save/restore remains in the editor/new page via localStorage.
-  const [tests, setTests] = useState<Array<{ _id: string; title: string; description?: string | null }>>([]);
+  const [tests, setTests] = useState<Array<{ _id: string; title: string; description?: string | null; storeResponses?: boolean }>>([]);
+  const [query, setQuery] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
-        const res = await fetch("/api/tests", { credentials: "include" });
+        const res = await fetch(`/api/tests?page=${page}&limit=10`, { credentials: "include" });
         if (!res.ok) return;
         const data = await res.json();
-        if (mounted && data?.ok && Array.isArray(data.tests)) setTests(data.tests.map((t: any) => ({ _id: t._id || t.id || t._id, title: t.title, description: t.description })));
+        if (mounted && data?.ok && Array.isArray(data.tests)) {
+          setTests(data.tests.map((t: any) => ({ _id: t._id || t.id || t._id, title: t.title, description: t.description, storeResponses: !!t.storeResponses })));
+          setTotalPages(data.totalPages || 1);
+        }
       } catch (err) {
         console.warn("Failed to load tests:", err);
       } finally {
@@ -38,8 +44,11 @@ export default function Editor() {
       <h2 className="mb-4 text-center">Редактор тестів</h2>
       <div className="menu-box d-flex flex-column gap-2">
         <Link href="/editor/new">
-          <button className="btn btn-primary w-100">Додати новий тест</button>
+          <a className="btn btn-primary w-100">Додати новий тест</a>
         </Link>
+        <div className="mt-2">
+          <input className="form-control" placeholder="Пошук за назвою тесту..." value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
+        </div>
         <div className="mt-3">
           <h3 className="h6">Мої тести</h3>
           {loading ? (
@@ -48,7 +57,7 @@ export default function Editor() {
             <div className="text-muted">У вас ще немає створених тестів.</div>
           ) : (
             <div className="list-group transparent-list">
-              {tests.map((t) => (
+              {tests.filter((t) => t.title.toLowerCase().includes(query.toLowerCase())).map((t) => (
                 <div key={t._id} className="list-group-item d-flex justify-content-between align-items-start">
                   <div>
                     <div className="fw-semibold">{t.title}</div>
@@ -56,8 +65,13 @@ export default function Editor() {
                   </div>
                   <div>
                     <Link href={`/editor/new?edit=${t._id}`}>
-                      <button className="btn btn-sm btn-outline-primary">Редагувати</button>
+                      <a className="btn btn-sm btn-outline-primary">Редагувати</a>
                     </Link>
+                    {t.storeResponses ? (
+                      <Link href={`/editor/attempts/${t._id}`}>
+                        <a className="btn btn-sm btn-outline-secondary ms-2">Проходження</a>
+                      </Link>
+                    ) : null}
                     <button
                       className="btn btn-sm btn-outline-danger ms-2"
                       onClick={async () => {
@@ -84,28 +98,28 @@ export default function Editor() {
                     </button>
                     <button
                       className="btn btn-sm btn-outline-success ms-2"
-                      onClick={async () => {
-                        try {
-                          const origin = typeof window !== "undefined" ? window.location.origin : "";
-                          const url = `${origin}/tests/${t._id}`;
-                          if (navigator.clipboard && navigator.clipboard.writeText) {
-                            await navigator.clipboard.writeText(url);
-                          } else {
-                            // fallback
-                            const tmp = document.createElement("input");
-                            document.body.appendChild(tmp);
-                            tmp.value = url;
-                            tmp.select();
-                            document.execCommand("copy");
-                            document.body.removeChild(tmp);
+                        onClick={async () => {
+                          try {
+                            // copy only the test id (code)
+                            const code = t._id;
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              await navigator.clipboard.writeText(code);
+                            } else {
+                              // fallback for older browsers
+                              const tmp = document.createElement("input");
+                              document.body.appendChild(tmp);
+                              tmp.value = code;
+                              tmp.select();
+                              document.execCommand("copy");
+                              document.body.removeChild(tmp);
+                            }
+                            setCopiedId(t._id);
+                            setTimeout(() => setCopiedId(null), 2500);
+                          } catch (err) {
+                            console.warn("Failed to copy id:", err);
+                            alert("Не вдалося скопіювати код тесту");
                           }
-                          setCopiedId(t._id);
-                          setTimeout(() => setCopiedId(null), 2500);
-                        } catch (err) {
-                          console.warn("Failed to copy link:", err);
-                          alert("Не вдалося скопіювати посилання");
-                        }
-                      }}
+                        }}
                     >
                       {copiedId === t._id ? "Скопійовано!" : "Поділитись"}
                     </button>
@@ -114,6 +128,11 @@ export default function Editor() {
               ))}
             </div>
           )}
+          <div className="d-flex justify-content-between align-items-center mt-3">
+            <button className="btn btn-outline-secondary" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Назад</button>
+            <div>Сторінка {page} / {totalPages}</div>
+            <button className="btn btn-outline-secondary" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Далі</button>
+          </div>
         </div>
       </div>
     </div>

@@ -135,6 +135,11 @@ const BaseQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f
         type: Number,
         required: true
     },
+    points: {
+        type: Number,
+        required: false,
+        default: 1
+    },
     type: {
         type: String,
         required: true
@@ -389,6 +394,7 @@ async function Page(ctx) {
         const openFrom = test.openFrom ? new Date(test.openFrom) : null;
         const openTo = test.openTo ? new Date(test.openTo) : null;
         const inWindow = !windowEnabled || (openFrom ? now >= openFrom : true) && (openTo ? now <= openTo : true);
+        const authorDisplayName = test.authorId && test.authorId.username ? test.authorId.username : "(невідомо)";
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "container d-flex flex-column align-items-center min-vh-100",
             children: [
@@ -397,18 +403,18 @@ async function Page(ctx) {
                     children: test.title
                 }, void 0, false, {
                     fileName: "[project]/app/tests/[id]/page.tsx",
-                    lineNumber: 24,
+                    lineNumber: 26,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "text-muted mb-3",
                     children: [
                         "Автор: ",
-                        test.authorId?.username || "(невідомо)"
+                        authorDisplayName
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/tests/[id]/page.tsx",
-                    lineNumber: 25,
+                    lineNumber: 27,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -418,7 +424,7 @@ async function Page(ctx) {
                             children: test.description
                         }, void 0, false, {
                             fileName: "[project]/app/tests/[id]/page.tsx",
-                            lineNumber: 27,
+                            lineNumber: 29,
                             columnNumber: 30
                         }, this) : null,
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -431,12 +437,12 @@ async function Page(ctx) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/tests/[id]/page.tsx",
-                                lineNumber: 29,
+                                lineNumber: 31,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/tests/[id]/page.tsx",
-                            lineNumber: 28,
+                            lineNumber: 30,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -447,7 +453,7 @@ async function Page(ctx) {
                                     children: "Доступність тесту"
                                 }, void 0, false, {
                                     fileName: "[project]/app/tests/[id]/page.tsx",
-                                    lineNumber: 32,
+                                    lineNumber: 34,
                                     columnNumber: 13
                                 }, this),
                                 windowEnabled ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -460,20 +466,20 @@ async function Page(ctx) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/tests/[id]/page.tsx",
-                                    lineNumber: 34,
+                                    lineNumber: 36,
                                     columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "text-muted",
                                     children: "Тест доступний без обмежень за датою."
                                 }, void 0, false, {
                                     fileName: "[project]/app/tests/[id]/page.tsx",
-                                    lineNumber: 38,
+                                    lineNumber: 40,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/tests/[id]/page.tsx",
-                            lineNumber: 31,
+                            lineNumber: 33,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -484,7 +490,7 @@ async function Page(ctx) {
                                     children: "Час на проходження"
                                 }, void 0, false, {
                                     fileName: "[project]/app/tests/[id]/page.tsx",
-                                    lineNumber: 42,
+                                    lineNumber: 44,
                                     columnNumber: 13
                                 }, this),
                                 test.timed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -496,20 +502,20 @@ async function Page(ctx) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/tests/[id]/page.tsx",
-                                    lineNumber: 44,
+                                    lineNumber: 46,
                                     columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "text-muted",
                                     children: "Час не обмежений."
                                 }, void 0, false, {
                                     fileName: "[project]/app/tests/[id]/page.tsx",
-                                    lineNumber: 46,
+                                    lineNumber: 48,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/tests/[id]/page.tsx",
-                            lineNumber: 41,
+                            lineNumber: 43,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -519,7 +525,7 @@ async function Page(ctx) {
                                     id: String(id)
                                 }, void 0, false, {
                                     fileName: "[project]/app/tests/[id]/page.tsx",
-                                    lineNumber: 51,
+                                    lineNumber: 53,
                                     columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                     className: "btn btn-secondary",
@@ -527,7 +533,7 @@ async function Page(ctx) {
                                     children: "Тест недоступний зараз"
                                 }, void 0, false, {
                                     fileName: "[project]/app/tests/[id]/page.tsx",
-                                    lineNumber: 53,
+                                    lineNumber: 55,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
@@ -537,30 +543,30 @@ async function Page(ctx) {
                                         children: "Назад до списку"
                                     }, void 0, false, {
                                         fileName: "[project]/app/tests/[id]/page.tsx",
-                                        lineNumber: 56,
+                                        lineNumber: 58,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/tests/[id]/page.tsx",
-                                    lineNumber: 55,
+                                    lineNumber: 57,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/tests/[id]/page.tsx",
-                            lineNumber: 49,
+                            lineNumber: 51,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/tests/[id]/page.tsx",
-                    lineNumber: 26,
+                    lineNumber: 28,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/app/tests/[id]/page.tsx",
-            lineNumber: 23,
+            lineNumber: 25,
             columnNumber: 7
         }, this);
     } catch (err) {
@@ -570,7 +576,7 @@ async function Page(ctx) {
             children: "Сталася помилка."
         }, void 0, false, {
             fileName: "[project]/app/tests/[id]/page.tsx",
-            lineNumber: 64,
+            lineNumber: 66,
             columnNumber: 12
         }, this);
     }

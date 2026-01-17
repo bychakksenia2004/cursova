@@ -163,6 +163,11 @@ const BaseQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f
         type: Number,
         required: true
     },
+    points: {
+        type: Number,
+        required: false,
+        default: 1
+    },
     type: {
         type: String,
         required: true
@@ -497,6 +502,8 @@ async function POST(req) {
                 type: mapType(q.type),
                 text: q.text
             };
+            // optional points per question (default handled by schema)
+            common.points = typeof q.points === "number" ? q.points : q.data && typeof q.data.points === "number" ? q.data.points : undefined;
             // preserve optional imageUrl if provided by client
             common.imageUrl = q.imageUrl || q.image && (q.image.secure_url || q.image.url) || undefined;
             if (q.type === "single" || q.type === "multi") {
@@ -551,10 +558,10 @@ async function GET(req) {
         }, {
             status: 401
         });
-        // Return list of tests authored by user
+        // Return list of tests authored by user (include storeResponses flag)
         const tests = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].find({
             authorId: user._id
-        }).select("title description").lean();
+        }).select("title description storeResponses").lean();
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             ok: true,
             tests

@@ -102,11 +102,11 @@ export default function Home() {
 
         {isAuth && (
           <>
-            <Link href="/profile">
+            <Link href="/history">
               <button className="btn btn-outline-dark w-100 mb-2">Історія тестувань</button>
             </Link>
             <Link href="/editor">
-              <button className="btn btn-outline-dark w-100 mb-2">Створити тест</button>
+              <button className="btn btn-outline-dark w-100 mb-2">Мої тести</button>
             </Link>
           </>
         )}

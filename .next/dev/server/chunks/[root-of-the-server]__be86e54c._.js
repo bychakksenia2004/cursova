@@ -163,6 +163,11 @@ const BaseQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f
         type: Number,
         required: true
     },
+    points: {
+        type: Number,
+        required: false,
+        default: 1
+    },
     type: {
         type: String,
         required: true
@@ -349,24 +354,38 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts_
 async function GET(req) {
     try {
         await (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$mongodb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["connectToDB"])();
-        // find public tests and include author's username
-        const tests = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].find({
+        // pagination params
+        const url = new URL(req.url);
+        const page = Math.max(1, Number(url.searchParams.get("page") || "1"));
+        const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") || "10")));
+        const skip = (page - 1) * limit;
+        // find public tests and include author's username and whether responses are stored
+        const baseQuery = {
             visibility: "public"
-        }).select("title description authorId timed timeLimitMinutes").populate({
+        };
+        const total = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].countDocuments(baseQuery);
+        const tests = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$models$2f$Test$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].find(baseQuery).select("title description authorId timed timeLimitMinutes storeResponses").populate({
             path: "authorId",
             select: "username"
-        }).lean();
+        }).sort({
+            _id: -1
+        }).skip(skip).limit(limit).lean();
         const mapped = Array.isArray(tests) ? tests.map((t)=>({
                 _id: t._id,
                 title: t.title,
                 description: t.description,
                 author: t.authorId?.username || null,
                 timed: !!t.timed,
-                timeLimitMinutes: t.timeLimitMinutes ?? null
+                timeLimitMinutes: t.timeLimitMinutes ?? null,
+                storeResponses: !!t.storeResponses
             })) : [];
+        const totalPages = Math.max(1, Math.ceil(total / limit));
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             ok: true,
-            tests: mapped
+            tests: mapped,
+            total,
+            page,
+            totalPages
         }, {
             status: 200
         });

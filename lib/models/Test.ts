@@ -6,6 +6,7 @@ type QBase = {
   type: "single_choice" | "multi_choice" | "sequence" | "matching" | "open";
   text: string;
   imageUrl?: string;
+  points?: number;
 };
 
 type SingleOption = { id: number; text: string; correct: boolean };
@@ -39,6 +40,7 @@ const questionOpts = { discriminatorKey: "type", _id: false } as const;
 const BaseQuestionSchema = new mongoose.Schema(
   {
     id: { type: Number, required: true },
+    points: { type: Number, required: false, default: 1 },
     type: { type: String, required: true },
     text: { type: String, required: true },
     imageUrl: { type: String, required: false },

@@ -10,10 +10,13 @@ export default function TakePageClient() {
   const id = params?.id;
   const router = useRouter();
   const [test, setTest] = useState<any | null>(null);
+  const [viewer, setViewer] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [started, setStarted] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [resultPreview, setResultPreview] = useState<any | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const timerRef = (typeof window !== "undefined") ? { current: null as any } : { current: null as any };
 
@@ -67,6 +70,8 @@ export default function TakePageClient() {
             return copy;
           }) : [];
           setTest({ ...t, questions: mapped, __inWindow: inWindow });
+          // if server provided viewer info, set it
+          if (t._viewer) setViewer(t._viewer);
         }
       } catch (err) {
         console.warn(err);
@@ -162,10 +167,58 @@ export default function TakePageClient() {
   }
 
   function submitLocal() {
-    console.log("User answers:", answers);
     try { if (timerRef.current) clearInterval(timerRef.current); } catch {}
-    alert("Відповіді збережено локально (консоль).");
-    router.push("/tests");
+    if (submitting) return; // prevent duplicate submits
+    setSubmitting(true);
+    (async () => {
+      let didRedirect = false;
+      try {
+        const res = await fetch(`/api/public-tests/${id}/submit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answers }),
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          console.warn("Submit error:", txt);
+          alert("Помилка надсилання відповіді");
+          router.push("/tests");
+          return;
+        }
+        const data = await res.json();
+        if (data && data.ok) {
+          // If server returned an attemptId, it was saved — behave as before.
+          if (data.attemptId) {
+            try { if (typeof window !== "undefined") alert("Відповіді збережено"); } catch {}
+            didRedirect = true;
+            router.push("/");
+            return;
+          }
+          // Anonymous taker and server did not persist: show immediate results according to returned payload
+          setResultPreview(data);
+          return;
+        } else {
+          alert("Невідома відповідь від сервера.");
+        }
+      } catch (err) {
+        console.warn(err);
+        alert("Помилка надсилання відповіді");
+      } finally {
+        // if we didn't already redirect to the saved attempt, go back to tests
+        setSubmitting(false);
+        if (!didRedirect) {
+          try {
+            if (typeof window !== "undefined" && window.location.pathname && window.location.pathname.startsWith("/history")) {
+              // already on a history page — do nothing
+            } else {
+              router.push("/tests");
+            }
+          } catch {
+            router.push("/tests");
+          }
+        }
+      }
+    })();
   }
 
   if (loading) return <div className="container min-vh-100">Завантаження...</div>;
@@ -175,7 +228,6 @@ export default function TakePageClient() {
     return (
       <div className="container d-flex flex-column align-items-center min-vh-100">
         <h2 className="mb-3">{test.title}</h2>
-        <div className="text-muted mb-3">Автор: {test.authorId?.username || "(невідомо)"}</div>
         <div className="menu-box w-100">
           <div className="alert alert-warning">Тест наразі недоступний за часовим вікном.</div>
           <div className="mb-3">
@@ -193,11 +245,27 @@ export default function TakePageClient() {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
 
+  const requiresLogin = !!test.storeResponses || !!test.requiresLogin;
+  const isAuthenticated = !!viewer;
+
+  if (requiresLogin && !isAuthenticated) {
+    return (
+      <div className="container d-flex flex-column align-items-center min-vh-100">
+        <h2 className="mb-3">{test.title}</h2>
+        <div className="menu-box w-100">
+          <div className="alert alert-warning">Цей тест вимагає реєстрації для проходження. Будь ласка, <a href="/login">увійдіть</a> або <a href="/register">зареєструйтесь</a>.</div>
+          <div className="mb-3">
+            <Link href="/tests"><button className="btn btn-outline-secondary">Назад до списку</button></Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
     <div className="container d-flex flex-column align-items-center min-vh-100">
       <h2 className="mb-3">{test.title}</h2>
-      <div className="text-muted mb-3">Автор: {test.authorId?.username || "(невідомо)"}</div>
       <div className="w-100 mb-2 d-flex justify-content-between align-items-center">
         <div>
           {started ? (
@@ -297,12 +365,45 @@ export default function TakePageClient() {
         ))}
 
         <div className="d-flex gap-2">
-          <button className="btn btn-primary" onClick={submitLocal}>Завершити та надіслати</button>
+          <button className="btn btn-primary" onClick={submitLocal} disabled={submitting}>{submitting ? "Надсилаю..." : "Завершити та надіслати"}</button>
           <Link href="/tests"><button className="btn btn-outline-secondary">Відмінити</button></Link>
         </div>
       </div>
     </div>
     <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+    {resultPreview ? (
+      <div
+        onClick={() => setResultPreview(null)}
+        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000 }}
+      >
+        <div className="menu-box p-4" style={{ maxWidth: 800, width: "95%" }} onClick={(e) => e.stopPropagation()}>
+          <h4>Результат</h4>
+          {typeof resultPreview.totalScore !== 'undefined' ? (
+            <div className="mb-2"><strong>Бали:</strong> {resultPreview.totalScore} / {resultPreview.totalPossible}</div>
+          ) : null}
+          {Array.isArray(resultPreview.perQuestion) ? (
+            <div>
+              <h5>Деталі питань</h5>
+              <div className="list-group">
+                {resultPreview.perQuestion.map((p: any, i: number) => (
+                  <div key={p.id || i} className="list-group-item">
+                    <div className="d-flex justify-content-between">
+                      <div>{i + 1}. {p.type}</div>
+                      <div>{p.score} / {p.points}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            !resultPreview.totalScore ? <div className="text-muted">Результати не доступні.</div> : null
+          )}
+          <div className="mt-3 d-flex justify-content-end">
+            <button className="btn btn-primary" onClick={() => setResultPreview(null)}>Закрити</button>
+          </div>
+        </div>
+      </div>
+    ) : null}
     </>
   );
 }

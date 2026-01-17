@@ -163,6 +163,11 @@ const BaseQuestionSchema = new __TURBOPACK__imported__module__$5b$externals$5d2f
         type: Number,
         required: true
     },
+    points: {
+        type: Number,
+        required: false,
+        default: 1
+    },
     type: {
         type: String,
         required: true
@@ -549,6 +554,8 @@ async function PUT(req, ctx) {
                 type: mapType(q.type),
                 text: q.text
             };
+            // optional points per question (preserve if provided)
+            common.points = typeof q.points === "number" ? q.points : q.data && typeof q.data.points === "number" ? q.data.points : undefined;
             // preserve optional imageUrl if provided from client
             common.imageUrl = q.imageUrl || q.image && (q.image.secure_url || q.image.url) || undefined;
             if (q.type === "single" || q.type === "multi") common.options = q.data?.options || q.options || [];
