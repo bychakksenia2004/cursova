@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# TestHub — Next.js application
 
-## Getting Started
+This repository contains a Next.js application (app router) used for creating and running tests.
 
-First, run the development server:
+## Project layout (important files)
+
+- `app/` — the Next.js application (pages, API routes under `app/api`).
+- `lib/` — helpers and Mongoose models (`Test`, `Attempt`, `User`).
+- `public/` — static assets.
+- `package.json`, `tsconfig.json` — project config and scripts.
+- `Dockerfile.prod`, `Dockerfile.dev` — Docker images for prod/dev (added).
+- `docker-compose.yml`, `docker-compose.dev.yml` — docker-compose helpers (added).
+
+Key app folders:
+
+- `app/editor` — editor UI and routes for creating/editing tests.
+- `app/tests` — public tests listing and test-taking pages.
+- `app/history` — user attempt history pages.
+
+## Local development
+
+Install dependencies and run the dev server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# open http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Docker-based development (recommended when testing in container):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+docker-compose -f docker-compose.dev.yml up --build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Notes for dev compose:
+- The compose file mounts the project into the container (`./:/usr/src/app`).
+- A named volume `node_modules` is used to keep container-installed modules separate.
+- `WATCHPACK_POLLING=true` is set to improve file watching on some host filesystems.
 
-## Learn More
+## Production build & Docker
 
-To learn more about Next.js, take a look at the following resources:
+Build and run the production image locally with compose:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+docker-compose up --build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Behavior of `Dockerfile.prod`:
+- Installs production dependencies, runs `npm run build`.
+- Attempts `npm run export` to produce a static `out/` directory (if your app supports export).
+- If `out/` exists, the container serves it with `serve -s out -l 3000`.
+- Otherwise it falls back to `npm run start` (which should run `next start`).
 
-## Deploy on Vercel
+If your app relies on SSR or API routes, prefer `next start` mode (do not rely on `next export`).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Docker files added
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `Dockerfile.prod` — production image (node:18-alpine).
+- `Dockerfile.dev` — development image with `nodemon` and `WATCHPACK_POLLING`.
+- `docker-compose.yml` — production compose (maps `3000:3000`).
+- `docker-compose.dev.yml` — development compose (code mount + `node_modules` named volume).
+
+## Running tips
+
+- To run only the frontend image in prod mode: `docker build -f Dockerfile.prod -t testhub-prod .` then `docker run -p 3000:3000 testhub-prod`.
+- To run dev with hot reload inside container: `docker-compose -f docker-compose.dev.yml up --build`.

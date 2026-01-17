@@ -1,0 +1,33 @@
+FROM node:20-alpine
+
+WORKDIR /usr/src/app
+
+ENV NODE_ENV=production
+
+# Copy package manifests first and install dependencies (cached layer)
+COPY package*.json ./
+
+# Install all dependencies (including dev) required to build the app inside the image
+# We will prune dev dependencies after building to keep runtime image slim
+RUN npm ci
+
+# Copy app sources
+COPY . .
+
+# Build the Next.js app (requires typescript if next.config.ts is present)
+RUN npm run build
+
+# Attempt a static export if the project defines an export script (optional)
+# This will create an `out` directory; if it's not applicable the command will be ignored
+RUN npm run export || true
+
+# Remove devDependencies to make the image production-ready
+RUN npm prune --production
+
+# Install a small static server to serve exported `out` (if present)
+RUN npm install -g serve
+
+EXPOSE 3000
+
+# If `out` exists (static export) serve it, otherwise fallback to `npm start` (Next.js `next start`)
+CMD ["sh", "-c", "if [ -d out ]; then serve -s out -l 3000; else npm run start; fi"]

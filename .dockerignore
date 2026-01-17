@@ -1,0 +1,20 @@
+# Залежності (повинні встановлюватися всередині контейнера)
+node_modules
+npm-debug.log
+
+# Папки збірки Next.js
+.next
+out
+build
+
+# Локальні змінні оточення
+.env*.local
+
+# Git
+.git
+.gitignore
+
+# Інше
+README.md
+Dockerfile*
+docker-compose*

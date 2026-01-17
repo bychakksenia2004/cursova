@@ -1,0 +1,24 @@
+FROM node:20-alpine
+
+WORKDIR /usr/src/app
+
+ENV NODE_ENV=development
+
+# Copy package manifests and install all dependencies (including dev)
+COPY package*.json ./
+RUN npm install
+
+# Install nodemon globally for auto-restarts / dev convenience
+RUN npm install -g nodemon
+
+# Copy source
+COPY . .
+
+# Expose dev port
+EXPOSE 3000
+
+# Enable watchpack polling by default in dev image
+ENV WATCHPACK_POLLING=true
+
+# Use nodemon to run the dev script and watch for changes (legacy watch for better behavior on some filesystems)
+CMD ["sh", "-c", "nodemon --watch . --ext js,ts,tsx,json --exec \"npm run dev\" --legacy-watch"]
